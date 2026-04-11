@@ -8,7 +8,7 @@ if (!apiKey) {
 
 export const genAI = new GoogleGenerativeAI(apiKey)
 
-export const DEFAULT_MODEL = "gemini-1.5-flash"
+export const DEFAULT_MODEL = "gemini-3-flash-preview"
 
 /**
  * 전역적으로 사용할 Gemini 모델 인스턴스를 반환합니다.
