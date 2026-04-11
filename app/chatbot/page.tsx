@@ -211,12 +211,12 @@ function CurriculumChatInner() {
                       ? 'bg-orange-50 text-gray-800 border border-orange-100'
                       : 'bg-gray-800 text-white'
                   )}>
-                    {msg.content.split('\n').map((line, j) => (
+                    {(msg.content || '').split('\n').map((line, j) => (
                       <span key={j}>
-                        {line.split(/\*\*(.*?)\*\*/).map((part, k) =>
+                        {(line || '').split(/\*\*(.*?)\*\*/).map((part, k) =>
                           k % 2 === 1 ? <strong key={k}>{part}</strong> : part
                         )}
-                        {j < msg.content.split('\n').length - 1 && <br />}
+                        {j < (msg.content || '').split('\n').length - 1 && <br />}
                       </span>
                     ))}
                   </div>
