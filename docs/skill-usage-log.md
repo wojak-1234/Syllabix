@@ -179,6 +179,33 @@ No.
 - Improvement Insight:
 `ActivityLog` 모델에 인덱스를 추가하면, 대량의 데이터가 쌓였을 때 AI 에이전트의 분석 쿼리 속도를 최적화할 수 있음.
 
+### [Skill Usage Log]
+
+- Timestamp: 2026-04-12T03:25:00+09:00
+- Skill Name: skill-usage-logger
+
+- Context:
+기존 웹사이트의 디자인 시스템(Orange/Amber 테마)을 계승한 프런트엔드 온보딩 진단 테스트 UI를 개발함.
+
+- Reason for Using This Skill:
+학습자가 처음 마주하는 UI의 일관성을 유지하고, AI 분석을 위한 데이터 수집 접점을 완성하기 위함.
+
+- Execution Summary:
+1. `app/onboarding/page.tsx` 생성 및 스타일링 적용.
+2. 5가지 항목의 인터랙티브 진단 퀴즈 구현.
+3. `/api/onboarding` 호출 로직 및 결과 데이터(sessionStorage) 관리 로직 통합.
+4. `AnimatedBackground`, `Navbar` 등 공통 컴포넌트 재사용으로 일관성 확보.
+
+- Result:
+사용자 친화적이고 전문적인 느낌의 온보딩 워크플로우 완성.
+
+- User Intervention:
+Yes (기존 메뉴의 색상 테마 반영 요청).
+
+- Improvement Insight:
+문항 전환 시 애니메이션 라이브러리(Framer Motion 등)를 추가하면 더욱 프리미엄한 사용자 경험(UX)을 제공할 수 있음.
+
+
 
 
 
