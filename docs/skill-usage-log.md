@@ -25,3 +25,28 @@ No.
 
 - Improvement Insight:
 skill-usage-logger 스킬 정의서에 수동 로그 작성이 아닌, 자동 스크립트화(예: 로깅용 CLI 도구)가 추가된다면 기록의 일관성을 더욱 높일 수 있음. 현재는 지침에 따라 수동 기록 수행.
+
+### [Skill Usage Log]
+
+- Timestamp: 2026-04-12T02:49:15+09:00
+- Skill Name: skill-usage-logger
+
+- Context:
+사용자가 작성한 'CodeMentor AI MVP 기획 문서(docs/project-overview.md)'를 검토하고, 프로젝트의 핵심 가치와 기술 스택을 파악함.
+
+- Reason for Using This Skill:
+프로젝트의 방향성이 결정되는 중요한 마일스톤을 기록하고, AI가 파악한 서비스의 핵심 철학(소크라테스식 교육 등)을 로그에 남기기 위함.
+
+- Execution Summary:
+1. docs/project-overview.md 내용 전수 검토.
+2. 'Blind Point 탐지', 'Socratic IDE', 'Agentic AI' 등 핵심 기능의 기술적 구현 가능성 확인.
+3. 프로젝트 가이드라인에 따른 협업 로그 작성 루틴 준수.
+
+- Result:
+AI가 프로젝트의 전체 컨텍스트를 완벽히 동기화함. 향후 코드 생성 및 상담 시 '직접 답을 주지 않는' 원칙을 고수할 준비 완료.
+
+- User Intervention:
+No.
+
+- Improvement Insight:
+기획 문서에 정의된 'AI 및 데이터 흐름' 도표를 바탕으로, 실제 구현 시 필요한 DB 스키마(Prisma)를 미리 제안하면 개발 속도를 높일 수 있음.
