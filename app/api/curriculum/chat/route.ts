@@ -4,10 +4,10 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 const PREFERENCE_QUESTIONS = [
-  "학습하고 싶은 프로그래밍 언어나 기술 스택이 있나요? (예: Python, JavaScript, React 등)",
-  "선호하는 학습 방식은 무엇인가요? (예: 이론 중심, 프로젝트 중심, 문제 풀이 중심 등)",
-  "학습하면서 가장 어렵게 느끼는 부분이 있나요? (예: 수학, 알고리즘, 개념 이해 등)",
-  "목표 직군이나 진로 방향이 있나요? (예: 웹 개발자, 데이터 사이언티스트, 취업, 대학원 등)",
+  "선호하는 학습 스타일은 무엇인가요? (예: 공식 문서/도서 중심, 영상 강의 중심, 또는 아주 작은 프로젝트부터 만들며 배우기 등)",
+  "학습을 진행할 때 가장 중요하게 생각하는 가치는 무엇인가요? (예: 코드의 깊은 원리 이해, 빠른 결과물 도출, 실무 적합성 등)",
+  "이전에 공부하면서 가장 포기하고 싶었던 순간이나 어려웠던 경험이 있다면 무엇인가요?",
+  "이번 커리큘럼을 통해 최종적으로 직접 만들어보고 싶은 구체적인 프로젝트 아이디어가 있나요?",
 ]
 
 // Final curriculum schema as plain object for @ts-ignore

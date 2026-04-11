@@ -80,7 +80,7 @@ function CurriculumChatInner() {
     if (!initialForm) return
     const greeting: Message = {
       role: 'assistant',
-      content: `안녕하세요! 🎓 **${initialForm.goal}** 달성을 위한 맞춤형 커리큘럼을 만들어 드릴게요.\n\n더 정확한 설계를 위해 몇 가지 간단한 질문을 드릴게요. 자유롭게 편하게 답해주세요!`
+      content: `반가워요! 👋 **${initialForm.goal}**에 대해 아주 열정적이시네요! 🎓\n\n최근 교육 트렌드와 당신의 학습 성향을 매칭해 최상의 커리큘럼을 짜 드리려고 합니다. 몇 가지 **학습 방법론** 관련 질문을 드릴게요!`
     }
     setMessages([greeting])
 
