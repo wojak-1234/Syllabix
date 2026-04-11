@@ -19,6 +19,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { MOCK_KNOWLEDGE_BASE } from "@/data/mock-courses"
+import { ExternalLink, PlayCircle } from "lucide-react"
 
 interface CurriculumPhase {
   phaseNumber: number
@@ -28,6 +30,7 @@ interface CurriculumPhase {
   milestone: string
   riskLevel: 'low' | 'medium' | 'high'
   riskReason: string
+  linkedCourseIds?: string[]
 }
 
 interface Curriculum {
@@ -216,24 +219,60 @@ export default function DashboardPage() {
                         ))}
                       </div>
 
-                      <div className="space-y-3 pt-4 border-t border-slate-100">
+                      <div className="space-y-4 pt-6 border-t border-slate-100/50">
                         <div className="flex items-start gap-3">
                           <Trophy className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-xs font-bold text-emerald-700 mb-0.5">도달 목표</p>
-                            <p className="text-sm text-gray-700 font-medium">{phase.milestone}</p>
+                            <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider mb-0.5">도달 목표</p>
+                            <p className="text-sm text-gray-700 font-medium leading-snug">{phase.milestone}</p>
                           </div>
                         </div>
                         {phase.riskReason && (
                           <div className="flex items-start gap-3">
                             <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                             <div>
-                              <p className="text-xs font-bold text-amber-700 mb-0.5">학습 포인트</p>
+                              <p className="text-[10px] font-black text-amber-700 uppercase tracking-wider mb-0.5">학습 포인트</p>
                               <p className="text-sm text-gray-600 font-medium leading-relaxed">{phase.riskReason}</p>
                             </div>
                           </div>
                         )}
                       </div>
+
+                      {/* Recommended Courses (RAG Results) */}
+                      {phase.linkedCourseIds && phase.linkedCourseIds.length > 0 && (
+                        <div className="mt-6 pt-6 border-t border-dashed border-slate-200 space-y-4">
+                          <h5 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Sparkles className="h-3 w-3 text-orange-400" /> AI 추천 학습 리소스
+                          </h5>
+                          <div className="grid grid-cols-1 gap-3">
+                            {phase.linkedCourseIds.map(courseId => {
+                              const course = MOCK_KNOWLEDGE_BASE.find(c => c.id === courseId);
+                              if (!course) return null;
+                              return (
+                                <div key={courseId} className="group/course relative flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-100 hover:border-orange-200 hover:shadow-md transition-all duration-300">
+                                  <div className="flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover/course:bg-orange-500 group-hover/course:text-white transition-colors">
+                                      <PlayCircle className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-0.5">
+                                        <h6 className="text-sm font-bold text-gray-900 leading-none truncate">{course.title}</h6>
+                                        <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-slate-100 text-slate-500 border-none font-bold shrink-0">
+                                          {course.provider}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-[11px] text-gray-400 line-clamp-1">{course.description}</p>
+                                    </div>
+                                  </div>
+                                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full hover:bg-orange-50 hover:text-orange-600 transition-colors shrink-0">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
