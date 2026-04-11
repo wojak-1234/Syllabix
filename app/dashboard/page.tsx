@@ -138,7 +138,7 @@ export default function DashboardPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-3 py-1 flex items-center gap-1.5">
-                      <Zap className="h-3 w-3" /> AI Personalized
+                      <Zap className="h-3 w-3" /> AI 개인화 설계
                     </Badge>
                   </div>
                   <h1 className="text-4xl font-black text-gray-900 tracking-tight">
@@ -147,13 +147,13 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center gap-6 bg-slate-50/80 p-5 rounded-3xl border border-slate-100 shadow-inner shrink-0">
                   <div className="text-center px-4 border-r border-slate-200">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Duration</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">전체 기간</p>
                     <p className="text-xl font-black text-gray-900 flex items-center gap-1.5">
                       <Clock className="h-4 w-4 text-orange-500" /> {curriculum.totalWeeks}주
                     </p>
                   </div>
                   <div className="text-center px-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Effort</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">총 학습 시간</p>
                     <p className="text-xl font-black text-gray-900 flex items-center gap-1.5">
                       <Sparkles className="h-4 w-4 text-amber-500" /> {curriculum.totalHours}시간
                     </p>
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                         <div className="flex items-start gap-3">
                           <Trophy className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-xs font-bold text-emerald-700 mb-0.5">Phase Milestone</p>
+                            <p className="text-xs font-bold text-emerald-700 mb-0.5">도달 목표</p>
                             <p className="text-sm text-gray-700 font-medium">{phase.milestone}</p>
                           </div>
                         </div>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                           <div className="flex items-start gap-3">
                             <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                             <div>
-                              <p className="text-xs font-bold text-amber-700 mb-0.5">Focus Point</p>
+                              <p className="text-xs font-bold text-amber-700 mb-0.5">학습 포인트</p>
                               <p className="text-sm text-gray-600 font-medium leading-relaxed">{phase.riskReason}</p>
                             </div>
                           </div>
@@ -241,12 +241,13 @@ export default function DashboardPage() {
 
               <div className="lg:col-span-4 space-y-6">
                 <div className="sticky top-28 space-y-6">
-                  <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden">
-                    <div className="absolute bottom-0 right-0 p-4 opacity-10">
-                      <Sparkles className="h-32 w-32" />
+                  <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl relative overflow-hidden group/actions">
+                    <div className="absolute -bottom-10 -right-10 p-4 opacity-5 group-hover/actions:opacity-10 transition-opacity">
+                      <Sparkles className="h-40 w-40 text-orange-500" />
                     </div>
-                    <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                       Journey Actions
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                       <Zap className="h-5 w-5 text-orange-500" />
+                       맞춤형 학습 관리
                     </h3>
                     <div className="space-y-4 relative z-10">
                       <Button 
@@ -255,18 +256,28 @@ export default function DashboardPage() {
                         className={cn(
                           "w-full h-14 rounded-2xl font-bold text-base transition-all",
                           saved 
-                           ? "bg-emerald-500 hover:bg-emerald-500 text-white" 
-                           : "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20"
+                           ? "bg-emerald-500 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" 
+                           : "bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-1 active:scale-95"
                         )}
                       >
-                        {saved ? <><Check className="mr-2 h-5 w-5" /> Saved Successfully</> : "Save This Plan"}
+                        {saved ? (
+                          <div className="flex items-center gap-2">
+                            <Check className="h-5 w-5" /> 
+                            저장이 완료되었습니다
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            커리큘럼 저장하기
+                            <ChevronRight className="h-4 w-4" />
+                          </div>
+                        )}
                       </Button>
                       <Button 
                         variant="outline" 
                         onClick={handleReset}
-                        className="w-full h-14 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 font-bold"
+                        className="w-full h-14 rounded-2xl bg-white border-orange-100 text-orange-600 hover:bg-orange-50 hover:border-orange-200 font-bold transition-all active:scale-95"
                       >
-                        Start New Goal
+                        새로운 목표 설정하기
                       </Button>
                     </div>
                   </div>
@@ -299,7 +310,7 @@ export default function DashboardPage() {
           <>
             <header className="text-center mb-16 space-y-4">
               <h1 className="bg-gradient-to-r from-orange-600 to-amber-500 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-6xl">
-                My Learning Journey
+                나만의 학습 여정
               </h1>
               <p className="mx-auto max-w-2xl text-lg text-muted-foreground font-medium">
                 당신만의 특별한 학습 목표를 설정하고, 원하시는 방향에 맞춰 AI가 최적의 커리큘럼을 설계해 드립니다.
