@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getGeminiModel } from "@/lib/gemini"
+import { ApiCache } from "@/lib/cache"
 
 /**
  * POST /api/teacher/generate-lecture
@@ -67,7 +68,17 @@ const lectureSchema = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { theme, keywords, difficulty, title } = await req.json()
+    const body = await req.json()
+    const { theme, keywords, difficulty, title } = body
+
+    // 1. 캐시 키 생성 및 조회
+    const cacheKey = ApiCache.generateKey('lecture', { theme, keywords, difficulty, title })
+    const cachedData = ApiCache.get(cacheKey)
+
+    if (cachedData) {
+      console.log(`[LectureGen] Returning CACHED response for: "${theme}"`)
+      return NextResponse.json({ success: true, lecture: cachedData, cached: true })
+    }
 
     console.log(`[LectureGen] Starting optimized single-shot generation for: "${theme}"`)
 
@@ -108,9 +119,13 @@ export async function POST(req: NextRequest) {
 
     console.log(`[LectureGen] Single-shot generation complete. Sections: ${lectureData.sections?.length}, Quizzes: ${lectureData.quizzes?.length}`)
 
+    // 2. 새로운 결과 캐싱 (기본 1시간)
+    ApiCache.set(cacheKey, lectureData)
+
     return NextResponse.json({
       success: true,
-      lecture: lectureData
+      lecture: lectureData,
+      cached: false
     })
 
   } catch (error: any) {

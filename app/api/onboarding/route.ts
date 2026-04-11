@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getGeminiModel } from '@/lib/gemini'
+import { ApiCache } from '@/lib/cache'
 
 const onboardingSchema = {
   type: "object",
@@ -44,10 +45,18 @@ const questionSchema = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { action, goal, chatContext, answers } = await req.json()
+    const body = await req.json()
+    const { action, goal, chatContext, answers } = body
 
     // 1. 문제 생성 모드
     if (action === 'generate') {
+      const cacheKey = ApiCache.generateKey('onboarding_gen', { goal, chatContext })
+      const cachedData = ApiCache.get(cacheKey)
+
+      if (cachedData) {
+        console.log(`[Onboarding] Returning CACHED questions for goal: ${goal}`)
+        return NextResponse.json(cachedData)
+      }
       const model = getGeminiModel({
         responseMimeType: "application/json",
         // @ts-ignore
@@ -79,7 +88,10 @@ export async function POST(req: NextRequest) {
       4. JSON 응답 시, options의 'label'에는 A,B,C,D가 아닌 실제 선택지 내용(텍스트)을 반드시 작성해야 합니다. 한글로 응답하세요.`
 
       const result = await model.generateContent(prompt)
-      return NextResponse.json(JSON.parse(result.response.text()))
+      const data = JSON.parse(result.response.text())
+      
+      ApiCache.set(cacheKey, data)
+      return NextResponse.json(data)
     }
 
 
