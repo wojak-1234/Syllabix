@@ -106,24 +106,27 @@ function DemandBarChart({ data }: { data: ThemeDemand[] }) {
 function CreateLectureModal({ theme, onClose }: { theme: ThemeDemand | null, onClose: () => void }) {
   const [title, setTitle] = useState("")
   const [difficulty, setDifficulty] = useState("beginner")
-  const [created, setCreated] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     if (theme) {
       setTitle(`${theme.theme} 마스터 클래스`)
-      setCreated(false)
+      setGenerating(false)
     }
   }, [theme])
 
   if (!theme) return null
 
-  const handleCreate = () => {
-    // 실제론 DB 저장 API 호출
-    setCreated(true)
-    setTimeout(() => {
-      onClose()
-      setCreated(false)
-    }, 1500)
+  const handleGenerateWithAI = () => {
+    setGenerating(true)
+    // sessionStorage에 요청 데이터 저장 후 초안 페이지로 이동
+    sessionStorage.setItem('lectureGenRequest', JSON.stringify({
+      theme: theme.theme,
+      title: title,
+      keywords: theme.topKeywords,
+      difficulty: difficulty
+    }))
+    window.location.href = '/teacher/lecture-draft'
   }
 
   return (
@@ -131,7 +134,7 @@ function CreateLectureModal({ theme, onClose }: { theme: ThemeDemand | null, onC
       <div className="bg-white rounded-[2rem] p-8 w-full max-w-lg shadow-2xl border border-white/60 animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
-            <Plus className="h-5 w-5 text-emerald-500" /> 새 강의 생성
+            <Plus className="h-5 w-5 text-emerald-500" /> AI 강의 초안 생성
           </h3>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
             <X className="h-5 w-5 text-gray-400" />
@@ -160,9 +163,9 @@ function CreateLectureModal({ theme, onClose }: { theme: ThemeDemand | null, onC
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">난이도 설정</label>
             <div className="flex gap-3">
               {[
-                { value: "beginner", label: "입문", color: "emerald" },
-                { value: "intermediate", label: "중급", color: "amber" },
-                { value: "advanced", label: "고급", color: "red" }
+                { value: "beginner", label: "입문" },
+                { value: "intermediate", label: "중급" },
+                { value: "advanced", label: "고급" }
               ].map(opt => (
                 <button
                   key={opt.value}
@@ -170,7 +173,7 @@ function CreateLectureModal({ theme, onClose }: { theme: ThemeDemand | null, onC
                   className={cn(
                     "flex-1 h-10 rounded-xl text-sm font-bold transition-all duration-200 border-2",
                     difficulty === opt.value
-                      ? `bg-${opt.color}-50 border-${opt.color}-400 text-${opt.color}-700 shadow-sm`
+                      ? "bg-emerald-50 border-emerald-400 text-emerald-700 shadow-sm"
                       : "bg-white border-slate-200 text-gray-400 hover:border-slate-300"
                   )}
                 >
@@ -191,26 +194,38 @@ function CreateLectureModal({ theme, onClose }: { theme: ThemeDemand | null, onC
           </div>
         </div>
 
+        {/* AI 생성 안내 */}
+        <div className="mt-6 p-3 rounded-xl bg-slate-50 border border-slate-100">
+          <p className="text-[11px] text-gray-500 font-medium flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-emerald-500" />
+            AI가 목차 → 강의 내용 → 진단 문제를 순차적으로 자동 생성합니다.
+          </p>
+        </div>
+
         <Button
-          onClick={handleCreate}
-          disabled={created || !title.trim()}
+          onClick={handleGenerateWithAI}
+          disabled={generating || !title.trim()}
           className={cn(
-            "w-full h-14 mt-8 rounded-2xl font-bold text-base transition-all",
-            created
-              ? "bg-emerald-500 text-white"
-              : "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:scale-95"
+            "w-full h-14 mt-4 rounded-2xl font-bold text-base transition-all",
+            "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:scale-95"
           )}
         >
-          {created ? (
-            <span className="flex items-center gap-2"><Check className="h-5 w-5" /> 강의가 생성되었습니다!</span>
+          {generating ? (
+            <span className="flex items-center gap-2">
+              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              준비 중...
+            </span>
           ) : (
-            <span className="flex items-center gap-2">강의 등록하기 <ChevronRight className="h-4 w-4" /></span>
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" /> AI로 강의 초안 생성하기
+            </span>
           )}
         </Button>
       </div>
     </div>
   )
 }
+
 
 
 // ─── 메인 페이지 ────────────────────────────────────────────────────────
