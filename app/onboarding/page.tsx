@@ -88,36 +88,54 @@ const QUESTIONS: Question[] = [
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(0)
+  const [step, setStep] = useState<'goal' | 'quiz' | 'done'>('goal')
+  const [goal, setGoal] = useState('')
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0)
+  const [questions, setQuestions] = useState<Question[]>([])
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
 
-  const progress = ((currentStep + 1) / QUESTIONS.length) * 100
+  const progress = questions.length > 0 ? ((currentQuestionIdx + 1) / questions.length) * 100 : 0
+
+  const handleStartDiagnostic = async () => {
+    if (!goal.trim()) return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate', goal })
+      })
+      const data = await res.json()
+      setQuestions(data.questions)
+      setStep('quiz')
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSelectOption = (value: string) => {
-    setAnswers(prev => ({ ...prev, [QUESTIONS[currentStep].id]: value }))
+    setAnswers(prev => ({ ...prev, [questions[currentQuestionIdx].id]: value }))
     
-    // Auto-advance if not on the last question
-    if (currentStep < QUESTIONS.length - 1) {
-      setTimeout(() => setCurrentStep(prev => prev + 1), 300)
+    if (currentQuestionIdx < questions.length - 1) {
+      setTimeout(() => setCurrentQuestionIdx(prev => prev + 1), 300)
     }
   }
 
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      // API call to evaluate onboarding results
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers })
+        body: JSON.stringify({ action: 'analyze', goal, answers })
       })
       const result = await res.json()
       
-      // Store result and transition
       sessionStorage.setItem('onboardingResult', JSON.stringify(result))
-      setDone(true)
+      setStep('done')
       
       setTimeout(() => {
         router.push('/dashboard')
@@ -135,22 +153,56 @@ export default function OnboardingPage() {
       <Navbar />
 
       <div className="relative z-10 container mx-auto max-w-2xl px-4 pt-32 pb-20">
-        {!done ? (
+        {step === 'goal' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header info */}
             <div className="text-center space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider">
-                <BrainCircuit className="h-3 w-3" />
-                Level Diagnostic
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold tracking-wider">
+                <Sparkles className="h-3 w-3" />
+                Step 1: Goal Setting
               </div>
-              <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                나만을 위한 클래스 설계
+              <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                무엇을 배우고 싶으신가요?
               </h1>
-              <p className="text-gray-500 text-sm">
-                5개의 질문을 통해 AI가 최적의 학습 경로를 분석합니다.
+              <p className="text-gray-500">
+                당신의 목표에 맞춰 AI가 최적의 진단 테스트를 생성합니다.
               </p>
             </div>
 
+            <Card className="p-8 bg-white/80 backdrop-blur-xl border-white/60 shadow-2xl rounded-[2rem]">
+              <div className="space-y-6">
+                <div>
+                  <label className="text-sm font-bold text-gray-700 mb-2 block">학습 목표 또는 관심 분야</label>
+                  <textarea
+                    value={goal}
+                    onChange={(e) => setGoal(e.target.value)}
+                    placeholder="예: React 프론트엔드 개발자가 되고 싶어요 / 파이썬으로 데이터 분석을 배우고 싶습니다."
+                    className="w-full h-32 p-4 rounded-2xl border border-gray-100 bg-white/50 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300 outline-none transition-all resize-none"
+                  />
+                </div>
+                <Button
+                  onClick={handleStartDiagnostic}
+                  disabled={!goal.trim() || loading}
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-bold text-lg shadow-lg shadow-orange-500/20 group"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      맞춤형 문제 생성 중...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      진단 시작하기
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  )}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {step === 'quiz' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Progress Bar */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-semibold text-gray-500">
@@ -159,7 +211,7 @@ export default function OnboardingPage() {
               </div>
               <div className="h-1.5 w-full bg-gray-200/50 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-500 ease-out"
+                  className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -169,36 +221,36 @@ export default function OnboardingPage() {
             <Card className="p-8 bg-white/80 backdrop-blur-xl border-white/60 shadow-2xl rounded-[2rem] min-h-[400px] flex flex-col">
               <div className="mb-8">
                 <span className="text-xs font-bold text-orange-500 mb-2 block uppercase tracking-widest">
-                  Question {QUESTIONS[currentStep].id}
+                  Question {questions[currentQuestionIdx].id}
                 </span>
                 <h2 className="text-xl font-bold text-gray-900 whitespace-pre-wrap leading-tight">
-                  {QUESTIONS[currentStep].question}
+                  {questions[currentQuestionIdx].question}
                 </h2>
                 <p className="text-sm text-gray-400 mt-2">
-                  {QUESTIONS[currentStep].description}
+                  {questions[currentQuestionIdx].description}
                 </p>
               </div>
 
               <div className="space-y-3 flex-1">
-                {QUESTIONS[currentStep].options.map((option) => (
+                {questions[currentQuestionIdx].options.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => handleSelectOption(option.value)}
                     className={cn(
                       "w-full p-4 text-left rounded-2xl border-2 transition-all duration-200 group flex items-center justify-between",
-                      answers[QUESTIONS[currentStep].id] === option.value
+                      answers[questions[currentQuestionIdx].id] === option.value
                         ? "bg-orange-50 border-orange-500 text-orange-700 shadow-md"
-                        : "bg-white border-gray-100/50 hover:border-orange-200 hover:bg-orange-50/30 text-gray-600"
+                        : "bg-white border-gray-100 placeholder-slate-400 hover:border-orange-200 hover:bg-orange-50/30 text-gray-600"
                     )}
                   >
-                    <span className="font-medium">{option.label}</span>
+                    <span className="font-medium text-sm">{option.label}</span>
                     <div className={cn(
                       "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
-                      answers[QUESTIONS[currentStep].id] === option.value
+                      answers[questions[currentQuestionIdx].id] === option.value
                         ? "border-orange-500 bg-orange-500"
                         : "border-gray-200 group-hover:border-orange-300"
                     )}>
-                      {answers[QUESTIONS[currentStep].id] === option.value && (
+                      {answers[questions[currentQuestionIdx].id] === option.value && (
                         <CheckCircle2 className="h-3.5 w-3.5 text-white" />
                       )}
                     </div>
@@ -210,16 +262,16 @@ export default function OnboardingPage() {
               <div className="mt-8 flex items-center justify-between">
                 <Button
                   variant="ghost"
-                  disabled={currentStep === 0}
-                  onClick={() => setCurrentStep(prev => prev - 1)}
-                  className="text-gray-400 hover:text-gray-600 rounded-xl"
+                  disabled={currentQuestionIdx === 0}
+                  onClick={() => setCurrentQuestionIdx(prev => prev - 1)}
+                  className="text-gray-400 rounded-xl"
                 >
                   이전으로
                 </Button>
                 
-                {currentStep === QUESTIONS.length - 1 ? (
+                {currentQuestionIdx === questions.length - 1 ? (
                   <Button 
-                    disabled={!answers[QUESTIONS[currentStep].id] || loading}
+                    disabled={!answers[questions[currentQuestionIdx].id] || loading}
                     onClick={handleSubmit}
                     className="rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-bold px-8 shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
                   >
@@ -228,8 +280,8 @@ export default function OnboardingPage() {
                   </Button>
                 ) : (
                   <Button
-                    disabled={!answers[QUESTIONS[currentStep].id]}
-                    onClick={() => setCurrentStep(prev => prev + 1)}
+                    disabled={!answers[questions[currentQuestionIdx].id]}
+                    onClick={() => setCurrentQuestionIdx(prev => prev + 1)}
                     className="rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 active:scale-95 transition-all"
                   >
                     다음
@@ -239,8 +291,9 @@ export default function OnboardingPage() {
               </div>
             </Card>
           </div>
-        ) : (
-          /* Completion State */
+        )}
+
+        {step === 'done' && (
           <div className="text-center space-y-6 py-12 animate-in zoom-in-95 fade-in duration-700">
             <div className="relative mx-auto h-24 w-24">
               <div className="absolute inset-0 bg-orange-500 rounded-full animate-ping opacity-20" />
