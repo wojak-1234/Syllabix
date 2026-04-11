@@ -147,10 +147,6 @@ export default function OnboardingPage() {
 
   const handleSelectOption = (value: string) => {
     setAnswers(prev => ({ ...prev, [questions[currentQuestionIdx].id]: value }))
-    
-    if (currentQuestionIdx < questions.length - 1) {
-      setTimeout(() => setCurrentQuestionIdx(prev => prev + 1), 300)
-    }
   }
 
   const handleSubmit = async () => {

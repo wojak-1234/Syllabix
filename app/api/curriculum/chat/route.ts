@@ -40,7 +40,7 @@ const curriculumSchema = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, initialForm, action } = await req.json()
+    const { messages, initialForm, onboardingResult, action } = await req.json()
 
     // ── 1. 다음 질문 생성 (action: 'chat') ──────────────────────────────
     if (action === 'chat') {
@@ -112,20 +112,29 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      const prompt = `당신은 교육 커리큘럼 전문가입니다.
-아래의 학습자 기본 정보와 대화 내용을 종합하여 최적의 커리큘럼을 JSON으로 설계해주세요.
+      const prompt = `당신은 초개인화 학습 설계 전문가입니다.
+      아래의 학습자 상담 내용과 실제 진단 테스트 결과를 종합하여 완벽한 커리큘럼을 JSON으로 설계해주세요.
 
-[기본 정보]
-- 최종 목표: ${initialForm.goal}
-- 현재 수준: ${initialForm.currentLevel}
-- 주당 학습 시간: ${initialForm.hoursPerWeek}시간
-- 제외 희망: ${initialForm.excludes || '없음'}
+      [1. 기본 정보]
+      - 최종 목표: ${initialForm.goal}
+      - 자가진단 수준: ${initialForm.currentLevel}
+      - 주당 학습 시간: ${initialForm.hoursPerWeek}시간
+      - 제외 희망 기술: ${initialForm.excludes || '없음'}
 
-[상세 대화 기록]
-${conversationSummary}
+      [2. 상담 내용 (성향/방법론)]
+      ${conversationSummary}
 
-위 정보를 바탕으로 완성도 높은 학습 로드맵을 JSON 스키마에 맞게 설계해줘.
-각 phase마다 riskLevel과 riskReason을 반드시 포함하고, aiInsight에는 전체 학습 여정에 대한 종합 분석을 담아줘.`
+      [3. 실제 진단 결과 (AI 분석)]
+      - 판정 수준: ${onboardingResult?.level || 'N/A'}
+      - 강점: ${onboardingResult?.strengths?.join(', ') || 'N/A'}
+      - 약점: ${onboardingResult?.weaknesses?.join(', ') || 'N/A'}
+      - 분석 내용: ${onboardingResult?.analysis || 'N/A'}
+
+      [설계 지침]
+      1. 상담에서 파악된 학습 성향(예: 프로젝트 중심)에 맞춰 주차별 주제를 선정하세요.
+      2. 진단 결과에서 드러난 '약점' 부분은 초반 주차에 보강하거나 더 긴 시간을 할당하여 설계하세요.
+      3. 판정 수준(${onboardingResult?.level})에 맞는 난이도의 학습 리소스를 추천하는 느낌으로 각 단계를 구성하세요.
+      4. JSON 스키마를 엄격히 준수하여 응답하세요.`
 
       const result = await model.generateContent(prompt)
       const responseText = result.response.text()
