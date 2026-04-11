@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getGeminiModel, genAI } from '@/lib/gemini'
+import { formatCoursesForPrompt } from '@/data/mock-courses'
 
 const chatResponseSchema = {
   type: "object",
@@ -133,8 +134,13 @@ export async function POST(req: NextRequest) {
       [설계 지침]
       1. 상담에서 파악된 학습 성향(예: 프로젝트 중심)에 맞춰 주차별 주제를 선정하세요.
       2. 진단 결과에서 드러난 '약점' 부분은 초반 주차에 보강하거나 더 긴 시간을 할당하여 설계하세요.
-      3. 판정 수준(${onboardingResult?.level})에 맞는 난이도의 학습 리소스를 추천하는 느낌으로 각 단계를 구성하세요.
-      4. JSON 스키마를 엄격히 준수하여 응답하세요.`
+      3. 판정 수준(${onboardingResult?.level})에 맞는 난이도의 학습 과제를 목표로 삼으세요.
+      4. 각 단계별로 가장 적합한 실제 학습 자료를 아래 [가용 강의 지식 베이스]에서 검색하여 제일 연관성이 높은 강의들의 ID를 'linkedCourseIds' 배열에 넣어야 합니다. 알맞은 것이 여러 개면 모두 넣고, 없으면 빈 배열로 두세요.
+      5. JSON 스키마를 엄격히 준수하여 응답하세요.
+
+      [가용 강의 지식 베이스 (강의/자료 RAG 인덱스)]
+      ${formatCoursesForPrompt()}
+      `
 
       const result = await model.generateContent(prompt)
       const responseText = result.response.text()
