@@ -103,4 +103,31 @@ No.
 - Improvement Insight:
 프런트엔드에서 API 응답 타입을 인터페이스로 정의하여 공유하면, API와 클라이언트 간의 데이터 정합성을 더 완벽하게 유지할 수 있음.
 
+### [Skill Usage Log]
+
+- Timestamp: 2026-04-12T03:19:00+09:00
+- Skill Name: skill-usage-logger
+
+- Context:
+사용자가 기획한 'AI 협업 문서 구조' 매뉴얼에 따라 전체 문서 체계를 물리적으로 구축함.
+
+- Reason for Using This Skill:
+프로젝트의 투명성을 높이고, 공모전 심사 시 AI와의 협업 서사(Narrative)를 증명하기 위한 기반 자료를 확보하기 위함.
+
+- Execution Summary:
+1. `docs/ai-sessions/` 폴더 생성 및 첫 세션 로그 기록.
+2. `docs/ARCHITECTURE_DECISIONS.md` 작성 (사용자 제공 저널 기반).
+3. `docs/AI_PLANNING.md`, `docs/PROMPT_GUIDE.md`, `docs/AI_REVIEW_LOG.md` 초기화 및 내용 동기화.
+4. 기존 로그 내용을 통합하여 심사용 문서로 마이그레이션.
+
+- Result:
+기획 문서에서 정의한 AI 협업 관리 체계가 100% 실행 상태로 전환됨.
+
+- User Intervention:
+Yes (사용자가 직접 기획 저널 콘텐츠를 제공하여 문서화 지시).
+
+- Improvement Insight:
+각 개발 단계(Phase)가 끝날 때마다 개발 로그를 `ai-sessions` 폴더에 자동으로 아카이빙하는 루틴을 유지해야 함.
+
+
 
