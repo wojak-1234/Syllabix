@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getGeminiModel } from '@/lib/gemini'
+import { getGeminiModel, MODELS } from '@/lib/gemini'
 import { ApiCache } from '@/lib/cache'
+import { buildOnboardingQuestionPrompt } from '@/lib/prompts'
 
 const onboardingSchema = {
   type: "object",
@@ -57,11 +58,10 @@ export async function POST(req: NextRequest) {
         console.log(`[Onboarding] Returning CACHED questions for goal: ${goal}`)
         return NextResponse.json(cachedData)
       }
-      const model = getGeminiModel({
-        responseMimeType: "application/json",
-        // @ts-ignore
-        responseSchema: questionSchema,
-      })
+      const model = getGeminiModel(
+        { responseMimeType: "application/json", responseSchema: questionSchema as any },
+        MODELS.STANDARD  // 온보딩 문제 생성: Standard 모델
+      )
 
       const contextSummary = chatContext 
         ? chatContext.messages.map((m: any) => m.content).join(' | ') 
@@ -70,22 +70,7 @@ export async function POST(req: NextRequest) {
       const targetGoal = chatContext?.initialForm?.goal || goal || "프로그래밍"
       const currentLevel = chatContext?.initialForm?.currentLevel || "beginner"
 
-      const isBeginner = currentLevel === "beginner"
-
-      const prompt = `당신은 핵심을 짚어내는 엄격하지만 세심한 시니어 엔지니어(면접관)입니다.
-      사용자는 챗봇 상담을 통해 자신의 학습 목표와 방법론, 어려워했던 부분을 공유했습니다.
-      이 정보를 철저히 분석하여 사용자의 현재 수준을 파악할 수 있는 가장 굵은 맥락과 필수 지식을 묻는 5개의 객관식(4지선다형) 질문을 생성하세요.
-
-      [사용자 정보]
-      - 학습 목표: "${targetGoal}"
-      - 현재 숙련도: "${currentLevel === 'beginner' ? '입문자 (기초 지식 필요)' : currentLevel}"
-      - 상담 내용(성향/약점): "${contextSummary}"
-
-      [문제 출제 지침]
-      1. ${isBeginner ? "사용자가 '입문자'이므로, 지나치게 어려운 응용 문제보다는 해당 기술(예: React, Python 등)이 '왜 필요한지', '가장 기초적인 개념이 무엇인지'를 묻는 근본적이고 쉬운 문제로 구성하세요." : "사용자가 취약하다고 한 부분이나 목표 기술 스택의 '핵심 개념/원리'를 날카롭게 파고드는 질문이어야 합니다."}
-      2. 단순 암기(문법)가 아닌, 동작 원리나 개념의 이유를 생각해야 풀 수 있는 문제로 구성하세요.
-      3. 난이도를 점진적으로 높이되, 사용자의 '숙련도'를 반드시 반영하세요.
-      4. JSON 응답 시, options의 'label'에는 A,B,C,D가 아닌 실제 선택지 내용(텍스트)을 반드시 작성해야 합니다. 한글로 응답하세요.`
+      const prompt = buildOnboardingQuestionPrompt({ targetGoal, currentLevel, contextSummary })
 
       const result = await model.generateContent(prompt)
       const data = JSON.parse(result.response.text())

@@ -8,14 +8,30 @@ if (!apiKey) {
 
 export const genAI = new GoogleGenerativeAI(apiKey)
 
-export const DEFAULT_MODEL = "gemini-3.1-flash-lite-preview"
+/**
+ * 용도별 모델 티어
+ * - LITE    : 챗봇 대화, 단순 Q&A 등 가벼운 작업
+ * - STANDARD: 온보딩 진단 문제 생성 등 중간 수준 작업
+ * - PRO     : 커리큘럼 설계, 강의 초안 생성 등 복잡한 구조화 작업
+ */
+export const MODELS = {
+  LITE:     "gemini-3.1-flash-lite-preview",
+  STANDARD: "gemini-1.5-flash",
+  PRO:      "gemini-3-flash-preview",
+} as const
+
+/** @deprecated DEFAULT_MODEL 대신 MODELS.LITE / MODELS.STANDARD / MODELS.PRO 를 명시적으로 사용하세요. */
+export const DEFAULT_MODEL = MODELS.LITE
 
 /**
  * 전역적으로 사용할 Gemini 모델 인스턴스를 반환합니다.
- * @param config 생성 결과 설정을 커스텀할 수 있습니다.
- * @param modelName 사용할 모델의 이름입니다.
+ * @param config   - 생성 결과 설정 (temperature, maxOutputTokens 등)
+ * @param modelName - 사용할 모델 (기본값: MODELS.LITE)
  */
-export function getGeminiModel(config?: Partial<GenerationConfig>, modelName: string = DEFAULT_MODEL) {
+export function getGeminiModel(
+  config?: Partial<GenerationConfig>,
+  modelName: string = MODELS.LITE
+) {
   return genAI.getGenerativeModel({
     model: modelName,
     generationConfig: {

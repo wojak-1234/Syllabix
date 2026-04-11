@@ -62,6 +62,8 @@ function CurriculumChatInner() {
   const [curriculum, setCurriculum] = useState<Curriculum | null>(null)
   const [saved, setSaved] = useState(false)
   const [initialForm, setInitialForm] = useState<any>(null)
+  // 사전 생성된 질문 Queue (API 호출 횟수 절감)
+  const [questionQueue, setQuestionQueue] = useState<string[]>([])
 
   // Parse initial form from URL params (sessionStorage fallback)
   useEffect(() => {
@@ -75,7 +77,7 @@ function CurriculumChatInner() {
     }
   }, [])
 
-  // Kick off first question when form is loaded
+  // form 로드 시 질문을 사전에 일괄 생성 (prefetch) — API 1회로 3개 질문 확보
   useEffect(() => {
     if (!initialForm) return
     const greeting: Message = {
@@ -84,29 +86,32 @@ function CurriculumChatInner() {
     }
     setMessages([greeting])
 
-    const sendFirstQuestion = async () => {
+    const prefetchQuestions = async () => {
       setLoading(true)
       try {
         const res = await fetch('/api/curriculum/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: [], initialForm, action: 'chat' })
+          body: JSON.stringify({ initialForm, action: 'prefetch', messages: [] })
         })
         const data = await res.json()
-        if (data.reply) {
-          setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
-          setProgress(data.progress ?? 0)
+        const questions: string[] = data.questions || []
+        if (questions.length > 0) {
+          // 첫 질문 즉시 표시, 나머지는 Queue에 보관
+          setMessages(prev => [...prev, { role: 'assistant', content: questions[0] }])
+          setQuestionQueue(questions.slice(1))
+          setProgress(0)
         } else {
-          // Fallback if AI fails
-          setMessages(prev => [...prev, { role: 'assistant', content: "죄송해요, 잠시 연결이 원활하지 않네요. 다시 한번 대화를 시작해볼까요?" }])
+          setMessages(prev => [...prev, { role: 'assistant', content: '학습자님의 목표를 위해 어떤 언어나 도구를 사용하고 싶으신가요?' }])
         }
       } catch (err) {
-        console.error("First question error:", err)
+        console.error('Prefetch error:', err)
+        setMessages(prev => [...prev, { role: 'assistant', content: '죄송해요, 잠시 연결이 원활하지 않네요. 다시 한번 대화를 시작해볼까요?' }])
       } finally {
         setLoading(false)
       }
     }
-    sendFirstQuestion()
+    prefetchQuestions()
   }, [initialForm])
 
   // Auto-scroll to bottom
@@ -121,26 +126,45 @@ function CurriculumChatInner() {
     const newMessages = [...messages, userMsg]
     setMessages(newMessages)
     setInput('')
-    setLoading(true)
 
+    const userCount = newMessages.filter(m => m.role === 'user').length
+    const MAX_TURNS = 3
+    const newProgress = Math.round((userCount / MAX_TURNS) * 100)
+    setProgress(newProgress)
+
+    if (userCount >= MAX_TURNS) {
+      // 모든 질문 완료
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '완벽해요! 모든 정보를 수집했습니다. 조금 전 분석한 데이터를 바탕으로 당신만을 위한 💡 예리한 진단 테스트를 준비할게요. 하단의 시작하기 버튼을 눌러주세요!'
+      }])
+      setChatDone(true)
+      return
+    }
+
+    // Queue에 남은 질문이 있으면 API 호출 없이 즉시 표시
+    if (questionQueue.length > 0) {
+      const [nextQ, ...rest] = questionQueue
+      setMessages(prev => [...prev, { role: 'assistant', content: nextQ }])
+      setQuestionQueue(rest)
+      return
+    }
+
+    // Queue 소진 시 폴백: 개별 API 호출
+    setLoading(true)
     try {
       const res = await fetch('/api/curriculum/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: newMessages.filter(m => m.role !== 'assistant' || newMessages.indexOf(m) > 0),
-          initialForm,
-          action: 'chat'
-        })
+        body: JSON.stringify({ messages: newMessages, initialForm, action: 'chat' })
       })
       const data = await res.json()
       if (data.reply) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
-        setProgress(data.progress ?? progress)
         if (data.done) setChatDone(true)
       }
     } catch (err) {
-      console.error("Chat error:", err)
+      console.error('Chat error:', err)
     } finally {
       setLoading(false)
     }
