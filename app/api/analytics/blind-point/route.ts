@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const apiKey = process.env.GEMINI_API_KEY || ''
-const genAI = new GoogleGenerativeAI(apiKey)
+import { getGeminiModel } from '@/lib/gemini'
 
 const blindPointSchema = {
   type: "object",
@@ -29,13 +26,10 @@ export async function POST(req: NextRequest) {
   try {
     const { userActivityLog } = await req.json()
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3-flash-preview",
-      generationConfig: {
-        responseMimeType: "application/json",
-        // @ts-ignore
-        responseSchema: blindPointSchema,
-      }
+    const model = getGeminiModel({
+      responseMimeType: "application/json",
+      // @ts-ignore
+      responseSchema: blindPointSchema,
     })
 
     const prompt = `학습자의 활동 로그(퀴즈 오답, IDE 시도 히스토리 등)를 분석하여 '모르는 줄 모르는' 취약 개념(Blind Points)을 찾아내세요.

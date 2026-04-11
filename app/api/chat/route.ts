@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const apiKey = process.env.GEMINI_API_KEY || ''
-const genAI = new GoogleGenerativeAI(apiKey)
+import { getGeminiModel } from '@/lib/gemini'
 
 export async function POST(req: NextRequest) {
   try {
     const { messages, codeContext } = await req.json()
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" })
+    const model = getGeminiModel()
 
     const systemPrompt = `당신은 'CodeMentor AI'의 소크라테스식 페어 프로그래머입니다.
     

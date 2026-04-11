@@ -78,3 +78,29 @@ No.
 - Improvement Insight:
 각 API마다 중복되는 Gemini 초기화 로직을 `lib/gemini.ts` 등으로 모듈화하면 코드 중복을 줄이고 모델 설정을 일괄 관리할 수 있음.
 
+### [Skill Usage Log]
+
+- Timestamp: 2026-04-12T03:16:30+09:00
+- Skill Name: skill-usage-logger
+
+- Context:
+Gemini API 사용 로직의 모듈화(Modularization)를 수행함.
+
+- Reason for Using This Skill:
+중복 코드를 제거하고 향후 모델 설정(Temperature, Max Tokens 등)을 한곳에서 관리할 수 있는 구조를 구축하기 위함.
+
+- Execution Summary:
+1. `lib/gemini.ts` 생성: `GoogleGenerativeAI` 초기화 및 `getGeminiModel` 헬퍼 함수 구현.
+2. 기존 모든 API 라우트(`onboarding`, `chat`, `blind-point`, `curriculum/generate`) 리팩토링.
+3. 직접적인 SDK 호출 방식을 전역 라이브러리 참조 방식으로 변경.
+
+- Result:
+코드 유지보수성이 대폭 향상되었으며, 신규 AI 기능 추가 시 일관된 설정을 즉시 적용할 수 있게 됨.
+
+- User Intervention:
+No.
+
+- Improvement Insight:
+프런트엔드에서 API 응답 타입을 인터페이스로 정의하여 공유하면, API와 클라이언트 간의 데이터 정합성을 더 완벽하게 유지할 수 있음.
+
+

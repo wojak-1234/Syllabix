@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-// Initialize the Gemini API client
-const apiKey = process.env.GEMINI_API_KEY || ''
-if (!apiKey) {
-  console.warn("GEMINI_API_KEY is not defined in the environment variables.")
-}
-const genAI = new GoogleGenerativeAI(apiKey)
+import { getGeminiModel } from '@/lib/gemini'
 
 const phaseSchema = {
   type: "object",
@@ -72,15 +65,12 @@ ${JSON.stringify(availableCourses, null, 2)}`
 
 위 정보를 바탕으로 최적 커리큘럼을 분석하고 지정된 JSON 스키마 구조로 결과만 출력해줘.`
 
-    // Use Gemini 1.5 Pro
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3-flash-preview",
-      generationConfig: {
-        responseMimeType: "application/json",
-        // @ts-ignore
-        responseSchema: curriculumSchema,
-        temperature: 0.2,
-      }
+    // Use Gemini
+    const model = getGeminiModel({
+      responseMimeType: "application/json",
+      // @ts-ignore
+      responseSchema: curriculumSchema,
+      temperature: 0.2,
     })
 
     const result = await model.generateContent(

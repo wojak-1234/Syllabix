@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const apiKey = process.env.GEMINI_API_KEY || ''
-const genAI = new GoogleGenerativeAI(apiKey)
+import { getGeminiModel } from '@/lib/gemini'
 
 const onboardingSchema = {
   type: "object",
@@ -20,13 +17,10 @@ export async function POST(req: NextRequest) {
   try {
     const { answers } = await req.json()
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3-flash-preview",
-      generationConfig: {
-        responseMimeType: "application/json",
-        // @ts-ignore
-        responseSchema: onboardingSchema,
-      }
+    const model = getGeminiModel({
+      responseMimeType: "application/json",
+      // @ts-ignore
+      responseSchema: onboardingSchema,
     })
 
     const prompt = `학습자의 온보딩 진단 테스트 답변을 분석하여 현재 수준과 학습 방향을 결정하세요.
