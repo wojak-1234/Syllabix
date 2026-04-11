@@ -155,6 +155,32 @@ Yes (한국어 변경 요청).
 
 ### [Skill Usage Log]
 
+- Timestamp: 2026-04-12T03:33:40+09:00
+- Skill Name: skill-usage-logger
+
+- Context:
+챗봇 상담 워크플로우를 문맥 기반 스타일로 고도화함.
+
+- Reason for Using This Skill:
+대화형 인터페이스의 중복을 제거하여 사용자 경험을 최적화하고, 더욱 가치 있는 학습 데이터(방법론)를 추출하기 위함.
+
+- Execution Summary:
+1. `app/api/curriculum/chat/route.ts`의 `PREFERENCE_QUESTIONS` 리스트 수정.
+2. 기술 스택 관련 질문을 삭제하고 학습 스타일, 가치, 장애물 관련 질문으로 교체.
+3. `app/chatbot/page.tsx`의 첫 인사말에 사용자의 기존 목표를 반영하도록 수정.
+
+- Result:
+학습자와의 대화가 더 자연스러워지고, 수집된 데이터를 통해 더 정밀한 커리큘럼 설계 가능.
+
+- User Intervention:
+Yes (중복 질문 제거 및 방법론 중심 질문 요청).
+
+- Improvement Insight:
+질문 리스트 자체를 AI가 `initialForm`을 보고 실시간으로 생성하도록 변경하면 더욱 극대화된 개인화 경험을 줄 수 있음.
+
+
+### [Skill Usage Log]
+
 - Timestamp: 2026-04-12T03:21:40+09:00
 - Skill Name: skill-usage-logger
 
