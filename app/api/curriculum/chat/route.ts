@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { getGeminiModel, genAI } from '@/lib/gemini'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-
-const PREFERENCE_QUESTIONS = [
-  "선호하는 학습 스타일은 무엇인가요? (예: 공식 문서/도서 중심, 영상 강의 중심, 또는 아주 작은 프로젝트부터 만들며 배우기 등)",
-  "학습을 진행할 때 가장 중요하게 생각하는 가치는 무엇인가요? (예: 코드의 깊은 원리 이해, 빠른 결과물 도출, 실무 적합성 등)",
-  "이전에 공부하면서 가장 포기하고 싶었던 순간이나 어려웠던 경험이 있다면 무엇인가요?",
-  "이번 커리큘럼을 통해 최종적으로 직접 만들어보고 싶은 구체적인 프로젝트 아이디어가 있나요?",
-]
+const chatResponseSchema = {
+  type: "object",
+  properties: {
+    reply: { type: "string" }
+  },
+  required: ["reply"]
+}
 
 // Final curriculum schema as plain object for @ts-ignore
 const curriculumSchema = {
@@ -46,20 +45,52 @@ export async function POST(req: NextRequest) {
     // ── 1. 다음 질문 생성 (action: 'chat') ──────────────────────────────
     if (action === 'chat') {
       const answeredCount = messages.filter((m: any) => m.role === 'user').length
+      const MAX_TURNS = 3 // 1: 언어특정, 2: 학습스타일, 3: 어려워하는 부분
 
-      // 아직 물어볼 질문이 남아있으면 다음 질문
-      if (answeredCount < PREFERENCE_QUESTIONS.length) {
-        const nextQuestion = PREFERENCE_QUESTIONS[answeredCount]
+      if (answeredCount < MAX_TURNS) {
+        const model = getGeminiModel({
+          responseMimeType: 'application/json',
+          // @ts-ignore
+          responseSchema: chatResponseSchema,
+        })
+
+        const conversationHistory = messages.map((m: any) => `${m.role === 'user' ? '학습자' : 'AI'}: ${m.content}`).join('\n')
+        
+        let turnGuidance = ""
+        if (answeredCount === 0) {
+           turnGuidance = `1. 첫 번째 질문: 사용자가 입력한 학습 목표("${initialForm.goal}")를 바탕으로, 이를 달성하기 위해 사용자가 염두에 두고 있는 구체적인 기술 스택이나 도구(예: 언어, 프레임워크, 엔진 등)를 특정하도록 유도하는 질문을 하세요. 상황에 맞는 적절한 2~3가지 선택지를 예시로 제시해주세요.`
+        } else if (answeredCount === 1) {
+           turnGuidance = "2. 두 번째 질문: 이전에 답한 내용을 바탕으로, 앞으로의 학습을 진행할 때 선호하는 학습 방식(이론 중심, 프로젝트 중심, 인강, 도서, 클론 코딩 등)에 대해 물어보세요."
+        } else {
+           turnGuidance = "3. 세 번째 질문: 과거에 무언가를 학습하며 가장 포기하고 싶었거나 어려웠던 경험, 또는 이번 학습에서 가장 걱정되는 병목 포인트(예: 알고리즘 설계, 에러 핸들링, 환경 설정 등)가 무엇인지 물어보세요."
+        }
+
+        const prompt = `당신은 코딩 교육 전문 컨설턴트입니다. 사용자의 목표에 최적화된 맞춤형 질문 하나만 생성하세요.
+        [초기 진단 정보]
+        - 목표: ${initialForm.goal}
+        - 현재 수준: ${initialForm.currentLevel}
+        
+        [이전 대화 기록]
+        ${conversationHistory}
+        
+        [다음 질문 생성 지침]
+        **${turnGuidance}**
+        
+        답변은 1~2문장의 길지 않은 내용으로, 친절하고 부드러운 톤으로 작성하세요. json 포맷으로 응답하세요.`
+
+        const result = await model.generateContent(prompt)
+        const parsed = JSON.parse(result.response.text())
+
         return NextResponse.json({
-          reply: nextQuestion,
+          reply: parsed.reply,
           done: false,
-          progress: Math.round((answeredCount / PREFERENCE_QUESTIONS.length) * 100)
+          progress: Math.round((answeredCount / MAX_TURNS) * 100)
         })
       }
 
-      // 모든 질문을 마쳤으면 완료 메시지
+      // 모든 질문 완료
       return NextResponse.json({
-        reply: "완벽해요! 모든 정보를 수집했습니다. 지금 AI가 당신만을 위한 최적의 커리큘럼을 설계하고 있어요. 잠시만 기다려 주세요... ✨",
+        reply: "완벽해요! 모든 정보를 수집했습니다. 조금 전 분석한 데이터를 바탕으로 당신만을 위한 💡 예리한 진단 테스트를 준비할게요. 하단의 시작하기 버튼을 눌러주세요!",
         done: true,
         progress: 100
       })
