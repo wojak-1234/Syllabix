@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  role          UserRole  @default(STUDENT)
+  curriculums   Curriculum[]
+  activities    ActivityLog[]
+  blindPoints   BlindPoint[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Curriculum {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  title         String
+  goal          String
+  currentLevel  String
+  phases        Json      // 주차별 로드맵 데이터 (배열 형태 저장)
+  aiInsight     String?   // AI가 분석한 이탈 위험 구간 등
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Lecture {
+  id            String    @id @default(cuid())
+  title         String
+  content       String    // 스크립트 또는 강의 본문 (RAG용)
+  videoUrl      String?
+  tags          String[]
+  difficulty    String
+  createdAt     DateTime  @default(now())
+}
+
+model ActivityLog {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  type          String    // QUIZ_ANSWER, IDE_ATTEMPT, VIDEO_VIEW
+  content       Json      // 제출한 코드, 퀴즈 점수 등 상세 데이터
+  lectureId     String?
+  createdAt     DateTime  @default(now())
+}
+
+model BlindPoint {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+  concept           String    // 식별된 취약 개념 (예: "Closure")
+  confidence        Float     // AI의 분석 신뢰도
+  evidence          String    // 분석 근거 (어떤 로그를 기반으로 판단했는지)
+  status            String    @default("DETECTED") // DETECTED, RESOLVED
+  suggestedAction   String?   // AI의 추천 조치 (기존 강의 재수강 등)
+  createdAt         DateTime  @default(now())
+}

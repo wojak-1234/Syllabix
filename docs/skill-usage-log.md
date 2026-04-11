@@ -153,6 +153,33 @@ Yes (한국어 변경 요청).
 - Improvement Insight:
 향후 신규 문서 작성 시 처음부터 한국어로 작성하여 불필요한 번역 과정을 제거할 것.
 
+### [Skill Usage Log]
+
+- Timestamp: 2026-04-12T03:21:40+09:00
+- Skill Name: skill-usage-logger
+
+- Context:
+CodeMentor AI의 데이터 레이어 구축을 위한 Prisma 데이터베이스 스키마 설계를 수행함.
+
+- Reason for Using This Skill:
+학습자의 행동 데이터를 체계적으로 축적하고, AI가 취약점(Blind Point)을 탐지할 수 있는 객체 지향적 데이터 구조를 확립하기 위함.
+
+- Execution Summary:
+1. `prisma/` 디렉토리 신규 생성.
+2. `User`, `Curriculum`, `Lecture`, `ActivityLog`, `BlindPoint` 등 핵심 모델 정의.
+3. `.env.local` 파일에 `DATABASE_URL` 플레이스홀더 추가.
+4. 사용자 활동 로그를 JSON으로 유연하게 저장할 수 있는 구조 설계.
+
+- Result:
+데이터베이스 연동 준비 완료. 기획된 모든 AI 기능(튜터링, 취약점 분석 등)이 데이터를 영구적으로 관리할 수 있는 기반 마련.
+
+- User Intervention:
+No.
+
+- Improvement Insight:
+`ActivityLog` 모델에 인덱스를 추가하면, 대량의 데이터가 쌓였을 때 AI 에이전트의 분석 쿼리 속도를 최적화할 수 있음.
+
+
 
 
 
