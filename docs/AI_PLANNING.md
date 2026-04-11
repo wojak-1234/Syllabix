@@ -1,35 +1,35 @@
-# CodeMentor AI: Planning & Roadmap
+# CodeMentor AI: 프로젝트 기획 및 로드맵
 
-## Vision
-To modernize coding education by replacing direct AI answers with guided problem-solving, making students better thinkers, not just better "copiers".
+## 비전 (Vision)
+직접적인 정답 제공 대신 가이드 중심의 문제 해결 방식을 도입하여, 학습자를 단순한 '코드 복사기'가 아닌 '스스로 생각하는 개발자'로 성장시키는 차세대 코딩 교육 플랫폼입니다.
 
-## Strategic Roadmap
+## 전략적 로드맵 (Roadmap)
 
-### Phase 1: Foundation (Current)
-- [x] Initial Requirements Gathering
-- [x] Core API Route Structure
-- [x] AI SDK Integration (Gemini)
-- [ ] Database Schema Definition (Prisma)
+### 1단계: 기반 구축 (현재 진행 중)
+- [x] 초기 요구사항 분석 및 기능 정의
+- [x] 핵심 API 라우트 구조 설계
+- [x] AI SDK 통합 (Gemini 1.5/3 Pro)
+- [ ] 데이터베이스 스키마 설계 (Prisma)
 
-### Phase 2: Core Learning Loop
-- [ ] Onboarding Diagnostic Flow (UI + API)
-- [ ] MVP Curriculum Generation
-- [ ] Socratic Chat Implementation (Streaming)
+### 2단계: 핵심 학습 루프 구현
+- [ ] 온보딩 진단 테스트 플로우 (UI + API)
+- [ ] MVP 커리큘럼 자동 생성 로직
+- [ ] 소크라테스식 AI 튜터링 채팅 (스트리밍 지원)
 
-### Phase 3: Teacher & Analytics
-- [ ] RAG Pipeline for Lecture Processing
-- [ ] Blind Point Detection Agent
-- [ ] Analytics Dashboards
+### 3단계: 강사 도구 및 분석 엔진
+- [ ] 강의 콘텐츠 처리용 RAG 파이프라인
+- [ ] 학습 취약점(Blind Point) 탐지 에이전트
+- [ ] 강사용 대시보드 및 리포트 시각화
 
-### Phase 4: Polish & Deploy
-- [ ] End-to-End Testing
-- [ ] Final UI/UX Polishing
-- [ ] Production Deployment
+### 4단계: 고도화 및 배포
+- [ ] 전체 기능 엔드투엔드(E2E) 테스트
+- [ ] UI/UX 디자인 디테일 개선
+- [ ] 프로덕션 환경 배포
 
-## Resource Allocation
-- **AI Engine**: Gemini (Flash for speed, Pro for complex reasoning)
-- **State Management**: React Hooks + Context API
-- **Styling**: Tailwind CSS
+## 리소스 할당 계획
+- **AI 엔진**: Gemini (Flash 모델로 속도 확보, Pro 모델로 복잡한 추론 처리)
+- **상태 관리**: React Hooks 및 Context API
+- **스타일링**: Tailwind CSS 기반의 모던 디자인
 
 ---
-*Created by AI Collaboration*
+*AI 협업을 통해 작성된 문서입니다.*
