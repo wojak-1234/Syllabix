@@ -7,19 +7,29 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
-const navItems = [
-  { label: "홈", href: "/", public: true },
-  { label: "커리큘럼", href: "/curriculum", public: false },
-  { label: "분석", href: "/blunders", public: false },
-  { label: "대시보드", href: "/dashboard", public: false },
-  { label: "교사", href: "/teacher", public: false },
-]
-
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const router = useRouter()
+
+  // 1. 역할에 따른 동적 메뉴 구성
+  const guestItems = [
+    { label: "홈", href: "/", public: true },
+    { label: "커리큘럼", href: "/curriculum", public: false },
+    { label: "분석", href: "/blunders", public: false },
+    { label: "대시보드", href: "/dashboard", public: false },
+    { label: "교사", href: "/teacher", public: false },
+  ]
+
+  const teacherItems = [
+    { label: "홈", href: "/", public: true },
+    { label: "강의 분석", href: "/teacher/analytics", public: false },
+    { label: "대시보드", href: "/teacher/dashboard", public: false },
+    { label: "교사", href: "/teacher", public: false },
+  ]
+
+  const navItems = userRole === "teacher" ? teacherItems : guestItems
 
   useEffect(() => {
     // Initial check
@@ -44,7 +54,7 @@ export function Navbar() {
     }
   }, [])
 
-  const handleNavClick = (e: React.MouseEvent, item: typeof navItems[0]) => {
+  const handleNavClick = (e: React.MouseEvent, item: any) => {
     if (!item.public && !userRole) {
       e.preventDefault()
       toast.error("로그인이 필요합니다", {
