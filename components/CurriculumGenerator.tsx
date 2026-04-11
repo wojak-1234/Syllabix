@@ -111,7 +111,7 @@ export default function CurriculumGenerator() {
               className="grid grid-cols-3 gap-4"
             >
               {[
-                { id: 'beginner', label: '초급자', desc: '기초 개념 지식', icon: Rocket },
+                { id: 'beginner', label: '입문자', desc: '해당 지식 전무/초보', icon: Rocket },
                 { id: 'intermediate', label: '중급자', desc: '실습 경험 있음', icon: Sparkles },
                 { id: 'advanced', label: '고급자', desc: '프로젝트 리딩', icon: Trophy }
               ].map((level) => (
