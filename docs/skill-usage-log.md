@@ -326,4 +326,51 @@ No (project-overview.md T-02 명세에 따라 자율 구현).
 - Improvement Insight:
 향후 강사가 초안의 각 섹션을 인라인 편집할 수 있는 ContentEditable 기능을 추가하면 검토·수정 워크플로우가 더욱 완성됨.
 
+---
 
+### Session: 2026-04-12 (05:11 ~ 05:55) — API 최적화
+
+#### Skill: Gemini API 호출 구조 감사 및 단일 호출 최적화
+- Timestamp: 2026-04-12T05:11:00+09:00
+- Task Description:
+전체 API 호출 지점을 grep으로 전수 확인하고, 가장 큰 병목인 Multi-step Chain의 불필요한 연속 호출을 제거.
+
+- Reason for Using This Skill:
+API Quota 초과로 서비스가 자주 중단되어, 근본적인 호출 횟수 절감이 필요.
+
+- Execution Summary:
+1. `api/teacher/generate-lecture`: 목차/설명/퀴즈 3개 스키마를 단일 `lectureSchema`로 통합, 3회 호출 → 1회.
+2. `lib/cache.ts` 신규 생성: `global.apiCache` 기반 TTL In-Memory 캐시 모듈.
+3. `api/teacher/generate-lecture`, `api/onboarding` 양쪽에 `ApiCache.get / set` 래핑.
+
+- Result:
+강의 초안 생성 시 API 호출 66% 절감. 동일 요청 재시도 시 0회 호출.
+
+- User Intervention:
+No (쿼터 초과 상황 보고 후 자율 분석 및 개선).
+
+#### Skill: 코드 유지보수성 향상 및 전방위 API 절감 리팩토링
+- Timestamp: 2026-04-12T05:50:00+09:00
+- Task Description:
+`docs/API_OPTIMIZATION_PLAN.md`에 전략을 수립하고, 계획의 모든 항목을 순차 구현.
+
+- Reason for Using This Skill:
+하드코딩된 프롬프트와 단일 모델 설정이 유지보수성을 저해하고, 챗봇 대화 API가 세션당 3회 호출되는 구조적 낭비 해소 필요.
+
+- Execution Summary:
+1. `lib/gemini.ts` 리팩토링: `MODELS = { LITE, STANDARD, PRO }` 3단계 분리, `DEFAULT_MODEL` deprecated 처리.
+2. `lib/prompts.ts` 신규 생성: `SYSTEM_ROLES`, `COMMON_RULES`, `buildCurriculumPrompt()`, `buildOnboardingQuestionPrompt()`, `buildPrefetchQuestionsPrompt()` 빌더 함수 중앙화.
+3. `api/curriculum/chat` 리팩토링: `prefetch` 액션 추가(질문 3개 일괄 생성), `generate` 액션에 캐싱 적용, 각 모델에 MODELS 티어 명시.
+4. `app/chatbot/page.tsx` 리팩토링: `questionQueue` 상태 도입, prefetch 응답을 Queue에 저장 후 API 0회로 순차 표시.
+5. `api/onboarding` 리팩토링: `MODELS.STANDARD` + `buildOnboardingQuestionPrompt()` 적용으로 하드코딩 프롬프트 제거.
+6. `docs/API_OPTIMIZATION_PLAN.md` 저장 및 체크리스트 전체 완료 처리.
+
+- Result:
+챗봇 상담 세션 API 호출 3회→1회, 커리큘럼/온보딩/강의 초안 재요청 0회 달성.
+프롬프트 수정 시 `lib/prompts.ts` 1개 파일만 편집하면 전체 AI 동작 일괄 조정 가능.
+
+- User Intervention:
+Yes (계획 수립 후 승인 요청 → 전체 실행 지시).
+
+- Improvement Insight:
+`api/analytics/blind-point`와 `api/chat`에도 동일한 MODELS 티어 및 캐싱 패턴을 적용하면 나머지 미적용 구간도 최적화 완성됨.

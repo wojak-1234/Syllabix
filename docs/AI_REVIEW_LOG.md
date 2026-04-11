@@ -110,5 +110,24 @@
   3. 대시보드 모달을 "AI 초안 생성" 전용으로 변경하여 원클릭 트리거 구현.
 - **사용자 피드백**: project-overview.md의 T-02 명세(수요 키워드 클릭 → 원클릭 초안 생성 → 검토·수정) 구현 요청 반영.
 
+- **타임스탬프**: 2026-04-12T05:11:00+09:00
+- **수행 작업**: Gemini API 호출 구조 감사 및 강의 생성 API 단일 호출 최적화.
+- **AI 결과**:
+  1. 기존 3단계 Multi-step Chain(`generate-lecture`)을 단일 통합 스키마+프롬프트로 병합하여 API 호출 3회→1회로 감소.
+  2. `lib/cache.ts` 생성: TTL 기반 In-Memory 캐시 (`global.apiCache`) 구현.
+  3. `api/teacher/generate-lecture`, `api/onboarding` 양쪽에 캐싱 레이어 적용.
+- **사용자 피드백**: API 쿼터 초과로 인한 서비스 중단 문제 해결 요청 반영.
+
+- **타임스탬프**: 2026-04-12T05:50:00+09:00
+- **수행 작업**: API 최적화 계획 수립 및 전체 실행 (코드 유지보수성 + API 절감 통합 리팩토링).
+- **AI 결과**:
+  1. `lib/gemini.ts` — `MODELS` 상수 3단계 분리(`LITE/STANDARD/PRO`). `DEFAULT_MODEL` deprecated 처리.
+  2. `lib/prompts.ts` 신규 생성 — 시스템 역할(`SYSTEM_ROLES`), 공통 규칙(`COMMON_RULES`), 프롬프트 빌더 함수(`buildCurriculumPrompt`, `buildOnboardingQuestionPrompt`, `buildPrefetchQuestionsPrompt`) 중앙화.
+  3. `api/curriculum/chat` — `prefetch` 액션 추가: 세션 시작 시 3개 질문 일괄 생성(API 3회→1회). 커리큘럼 생성에 캐싱 적용.
+  4. `app/chatbot/page.tsx` — Question Queue 도입: prefetch로 받은 질문을 로컬 Queue에 저장 후 API 호출 없이 순차 표시.
+  5. `api/onboarding` — `MODELS.STANDARD` 티어 및 `buildOnboardingQuestionPrompt()` 적용.
+  6. `docs/API_OPTIMIZATION_PLAN.md` 저장 (계획서 + 체크리스트 전체 완료 처리).
+- **사용자 피드백**: 코드 유지보수성 향상 및 API 사용량 절감 방안 강구 요청 반영.
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*
