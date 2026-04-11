@@ -80,7 +80,21 @@ export async function POST(req: NextRequest) {
         답변은 1~2문장의 길지 않은 내용으로, 친절하고 부드러운 톤으로 작성하세요. json 포맷으로 응답하세요.`
 
         const result = await model.generateContent(prompt)
-        const parsed = JSON.parse(result.response.text())
+        const responseText = result.response.text()
+        console.log("Gemini Raw Reply:", responseText)
+        
+        let parsed;
+        try {
+          parsed = JSON.parse(responseText)
+        } catch (e) {
+          console.error("JSON Parse Error:", e, "Text:", responseText)
+          // Fallback if JSON fails but text might be okay
+          return NextResponse.json({
+            reply: responseText || "학습자님의 목표를 위해 어떤 언어나 도구를 사용하고 싶으신가요?",
+            done: false,
+            progress: Math.round((answeredCount / MAX_TURNS) * 100)
+          })
+        }
 
         return NextResponse.json({
           reply: parsed.reply,
@@ -103,14 +117,11 @@ export async function POST(req: NextRequest) {
         .map((m: any) => `${m.role === 'user' ? '학습자' : 'AI'}: ${m.content}`)
         .join('\n')
 
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-3-flash-preview',
-        generationConfig: {
+      const model = getGeminiModel({
           responseMimeType: 'application/json',
           // @ts-ignore
           responseSchema: curriculumSchema,
           temperature: 0.2,
-        }
       })
 
       const prompt = `당신은 초개인화 학습 설계 전문가입니다.

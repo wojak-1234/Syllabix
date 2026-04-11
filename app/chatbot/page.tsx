@@ -86,15 +86,25 @@ function CurriculumChatInner() {
 
     const sendFirstQuestion = async () => {
       setLoading(true)
-      const res = await fetch('/api/curriculum/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [], initialForm, action: 'chat' })
-      })
-      const data = await res.json()
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
-      setProgress(data.progress ?? 0)
-      setLoading(false)
+      try {
+        const res = await fetch('/api/curriculum/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [], initialForm, action: 'chat' })
+        })
+        const data = await res.json()
+        if (data.reply) {
+          setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
+          setProgress(data.progress ?? 0)
+        } else {
+          // Fallback if AI fails
+          setMessages(prev => [...prev, { role: 'assistant', content: "죄송해요, 잠시 연결이 원활하지 않네요. 다시 한번 대화를 시작해볼까요?" }])
+        }
+      } catch (err) {
+        console.error("First question error:", err)
+      } finally {
+        setLoading(false)
+      }
     }
     sendFirstQuestion()
   }, [initialForm])
@@ -113,20 +123,27 @@ function CurriculumChatInner() {
     setInput('')
     setLoading(true)
 
-    const res = await fetch('/api/curriculum/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: newMessages.filter(m => m.role !== 'assistant' || newMessages.indexOf(m) > 0),
-        initialForm,
-        action: 'chat'
+    try {
+      const res = await fetch('/api/curriculum/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newMessages.filter(m => m.role !== 'assistant' || newMessages.indexOf(m) > 0),
+          initialForm,
+          action: 'chat'
+        })
       })
-    })
-    const data = await res.json()
-    setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
-    setProgress(data.progress ?? progress)
-    if (data.done) setChatDone(true)
-    setLoading(false)
+      const data = await res.json()
+      if (data.reply) {
+        setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
+        setProgress(data.progress ?? progress)
+        if (data.done) setChatDone(true)
+      }
+    } catch (err) {
+      console.error("Chat error:", err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleGoToOnboarding = () => {
