@@ -50,3 +50,31 @@ No.
 
 - Improvement Insight:
 기획 문서에 정의된 'AI 및 데이터 흐름' 도표를 바탕으로, 실제 구현 시 필요한 DB 스키마(Prisma)를 미리 제안하면 개발 속도를 높일 수 있음.
+
+### [Skill Usage Log]
+
+- Timestamp: 2026-04-12T03:02:00+09:00
+- Skill Name: skill-usage-logger
+
+- Context:
+기획 문서에 기반한 API 라우트 구조 개편을 수행함. 사용자의 요청에 따라 모든 AI 엔진은 Claude 대신 Gemini API를 사용하도록 구현.
+
+- Reason for Using This Skill:
+대규모 파일 구조 변경 및 신규 API 라우트 생성 과정을 기록하여 프로젝트 진행 상황을 추적하기 위함.
+
+- Execution Summary:
+1. `app/api/` 하위에 `onboarding`, `chat`, `analytics/blind-point`, `lectures` 디렉토리 구성.
+2. `onboarding/route.ts`: 진단 테스트 분석용 Gemini API 연동.
+3. `chat/route.ts`: 소크라테스식 대화 가이드를 포함한 페어 프로그래머 API 구현.
+4. `analytics/blind-point/route.ts`: 활동 로그 기반 취약점 탐지 로직 구성.
+5. `lectures/`: RAG 파이프라인(업로드/검색)을 위한 보일러플레이트 작성.
+
+- Result:
+공모전 MVP를 위한 백엔드 API 골격 완성. 프런트엔드 연동 준비 완료.
+
+- User Intervention:
+No.
+
+- Improvement Insight:
+각 API마다 중복되는 Gemini 초기화 로직을 `lib/gemini.ts` 등으로 모듈화하면 코드 중복을 줄이고 모델 설정을 일괄 관리할 수 있음.
+
