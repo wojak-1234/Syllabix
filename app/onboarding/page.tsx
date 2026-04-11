@@ -14,7 +14,8 @@ import {
   BrainCircuit, 
   Code2, 
   Trophy,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
