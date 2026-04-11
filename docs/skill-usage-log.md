@@ -257,8 +257,73 @@ Yes (기존 메뉴의 색상 테마 반영 요청).
 - Improvement Insight:
 문항 전환 시 애니메이션 라이브러리(Framer Motion 등)를 추가하면 더욱 프리미엄한 사용자 경험(UX)을 제공할 수 있음.
 
+---
 
+### Session: 2026-04-12 (04:00 ~ 05:06)
 
+#### Skill: RAG 지식 베이스 구축 및 커리큘럼 연동
+- Timestamp: 2026-04-12T04:30:00+09:00
+- Task Description:
+AI 커리큘럼 생성 시 실제 강의 콘텐츠를 자동 매칭하는 In-context RAG 파이프라인 구축.
 
+- Reason for Using This Skill:
+생성된 커리큘럼이 단순 계획표에 그치지 않고, 실제 학습 자료와 연결되어야 교육적 가치가 극대화됨.
+
+- Execution Summary:
+1. `data/mock-courses.ts`: 6개 강의/도서 Mock 지식 베이스 생성 (제목, 플랫폼, 난이도, 태그, 설명).
+2. `app/api/curriculum/chat/route.ts` 프롬프트에 지식 베이스 인덱스 주입 → AI가 `linkedCourseIds` 자동 배정.
+3. `app/dashboard/page.tsx`에 "AI 추천 학습 리소스" 위젯 추가 (PlayCircle 아이콘, 플랫폼 배지, 외부 링크).
+4. `/dashboard/demo` 데모 페이지 생성: API 호출 없이 결과 확인 가능한 쇼케이스.
+
+- Result:
+커리큘럼의 각 주차에 관련 강의가 자동으로 추천되어 학습 자료 접근성 향상.
+
+- User Intervention:
+Yes (Mock 형태로 먼저 미리보기 요청 → 데모 페이지 추가).
+
+#### Skill: 교사 역할 기반 Navbar 동적 메뉴
+- Timestamp: 2026-04-12T04:51:00+09:00
+- Task Description:
+교사 로그인 시 Navbar 메뉴 항목을 교사 전용('홈/강의 분석/대시보드/교사')으로 동적 전환.
+
+- Execution Summary:
+1. `components/navbar.tsx`의 정적 `navItems` 배열을 `guestItems` / `teacherItems`로 분리.
+2. `userRole` 상태에 따라 런타임에 메뉴 교체.
+3. 교사 전용 경로: `/teacher/analytics`, `/teacher/dashboard`.
+
+- Result:
+역할별 메뉴 분기가 즉시 반영되며 접근 제어(RBAC) 기반 네비게이션 완성.
+
+#### Skill: 교사 대시보드 수요 분석 시각화
+- Timestamp: 2026-04-12T04:54:00+09:00
+- Task Description:
+학생 학습 데이터를 집계하여 테마별 수요를 막대그래프로 시각화하고, AI 추천 강의 테마를 교사에게 제시.
+
+- Execution Summary:
+1. `data/theme-demand.ts`: 7개 테마 수요 Mock 데이터 (수요 지수, 학생 수, 성장률, 취약점, 키워드).
+2. `app/api/teacher/demand/route.ts`: 수요 데이터 정렬 반환 REST API.
+3. `app/teacher/dashboard/page.tsx`: 통계 카드 3개 + 커스텀 CSS 막대그래프 + AI 추천 패널 + 강의 생성 모달.
+
+- Result:
+교사가 데이터 기반으로 가장 수요가 높은 강의 테마를 한눈에 파악 가능.
+
+#### Skill: T-02 Multi-step Chain AI 강의 초안 생성
+- Timestamp: 2026-04-12T05:01:00+09:00
+- Task Description:
+수요 키워드 클릭 → 원클릭으로 강의 목차·설명·문제 세트를 AI가 3단계 순차 자동 생성.
+
+- Execution Summary:
+1. `app/api/teacher/generate-lecture/route.ts`: Gemini 기반 3단계 순차 체인 (Step 1: 목차 → Step 2: 섹션별 설명+코드 예제 → Step 3: 진단 문제 세트).
+2. `app/teacher/lecture-draft/page.tsx`: 생성 진행 3단계 시각화, 아코디언 섹션 카드, 코드 블록, 강사 팁, 인터랙티브 퀴즈 카드, 탭 전환.
+3. 대시보드 모달 리팩토링: "AI로 강의 초안 생성하기" 원클릭 트리거 → sessionStorage로 데이터 전달 → `/teacher/lecture-draft` 리다이렉트.
+
+- Result:
+강사가 제목과 난이도만 설정하면 AI가 강의 전체 초안(목차+내용+문제)을 자동 생성하여 제작 진입 장벽 대폭 감소.
+
+- User Intervention:
+No (project-overview.md T-02 명세에 따라 자율 구현).
+
+- Improvement Insight:
+향후 강사가 초안의 각 섹션을 인라인 편집할 수 있는 ContentEditable 기능을 추가하면 검토·수정 워크플로우가 더욱 완성됨.
 
 

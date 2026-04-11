@@ -81,6 +81,34 @@
 - **수행 작업**: 챗봇 페이지 렌더링 런타임 에러(TypeError) 수정.
 - **AI 결과**: `app/chatbot/page.tsx` 내 메시지 렌더링 로직에서 `msg.content`가 정의되지 않았을 경우 `split` 함수 호출로 인해 앱이 중단되는 현상 해결. 모든 문자열 조작 로직에 방어적 Null Check(`|| ''`) 적용.
 - **사용자 피드백**: 'Cannot read properties of undefined (reading 'split')' 런타임 에러 긴급 대응 요청 반영.
+- **타임스탬프**: 2026-04-12T04:30:00+09:00
+- **수행 작업**: 강의 콘텐츠 RAG 지식 베이스 구축 및 커리큘럼 연동.
+- **AI 결과**: 
+  1. `data/mock-courses.ts` 생성: 6개 강의/도서 데이터(제목, 플랫폼, 난이도, 태그, 설명)를 포함한 Mock 지식 베이스 구축.
+  2. `app/api/curriculum/chat/route.ts` 프롬프트에 지식 베이스를 주입하여, AI가 주차별 로드맵에 가장 적합한 `linkedCourseIds`를 자동 배정하도록 구현 (In-context RAG).
+  3. `app/dashboard/page.tsx`에 "AI 추천 학습 리소스" 위젯 추가: 강의 카드(플랫폼 배지, 설명, 외부 링크 포함) 렌더링.
+- **사용자 피드백**: Mock 형태로 먼저 확인하고 싶다는 요청에 따라 `/dashboard/demo` 데모 페이지 추가 생성.
+
+- **타임스탬프**: 2026-04-12T04:51:00+09:00
+- **수행 작업**: 교사 역할 기반 Navbar 동적 메뉴 구성.
+- **AI 결과**: `components/navbar.tsx`의 `navItems`를 역할(`userRole`) 상태에 따라 동적으로 분기하도록 리팩토링. 교사 로그인 시 '홈 / 강의 분석 / 대시보드 / 교사' 메뉴로 자동 전환.
+- **사용자 피드백**: 교사 전용 메뉴 항목 및 경로(`/teacher/analytics`, `/teacher/dashboard`) 지정 요청 반영.
+
+- **타임스탬프**: 2026-04-12T04:54:00+09:00
+- **수행 작업**: 교사 대시보드 수요 분석 막대그래프 및 강의 생성 시스템 구축.
+- **AI 결과**: 
+  1. `data/theme-demand.ts`: 7개 테마의 수요 지수·학생 수·성장률·취약점·키워드 Mock 데이터 생성.
+  2. `app/api/teacher/demand/route.ts`: 수요 데이터 정렬 반환 REST API.
+  3. `app/teacher/dashboard/page.tsx`: 통계 카드 3개 + 커스텀 막대그래프 + AI 추천 패널 + 강의 생성 모달 구현.
+- **사용자 피드백**: DB 테마별 수요 데이터를 막대그래프로 시각화하고, "홍길동 선생님에게 추천하는 강의 테마"를 제시하라는 요청 반영.
+
+- **타임스탬프**: 2026-04-12T05:01:00+09:00
+- **수행 작업**: T-02 AI 강의 초안 자동 생성 (Multi-step Chain).
+- **AI 결과**: 
+  1. `app/api/teacher/generate-lecture/route.ts`: Gemini 3단계 순차 실행 체인 구현 (목차 → 섹션별 설명 → 진단 문제 세트).
+  2. `app/teacher/lecture-draft/page.tsx`: 생성 진행 상태 표시, 아코디언 섹션 카드(코드 예제+강사 팁), 인터랙티브 퀴즈 카드, 탭 전환 UI.
+  3. 대시보드 모달을 "AI 초안 생성" 전용으로 변경하여 원클릭 트리거 구현.
+- **사용자 피드백**: project-overview.md의 T-02 명세(수요 키워드 클릭 → 원클릭 초안 생성 → 검토·수정) 구현 요청 반영.
 
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*
