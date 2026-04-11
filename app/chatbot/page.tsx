@@ -129,23 +129,14 @@ function CurriculumChatInner() {
     setLoading(false)
   }
 
-  const handleGenerateCurriculum = async () => {
+  const handleGoToOnboarding = () => {
     setGenerating(true)
-    const res = await fetch('/api/curriculum/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, initialForm, action: 'generate' })
-    })
-    const data = await res.json()
-    setCurriculum(data.curriculum)
-    setGenerating(false)
-  }
-
-  const handleSaveToDashboard = () => {
-    if (!curriculum) return
-    sessionStorage.setItem('savedCurriculum', JSON.stringify(curriculum))
-    setSaved(true)
-    setTimeout(() => router.push('/dashboard'), 1200)
+    const chatContext = {
+      initialForm,
+      messages: messages.filter(m => m.role === 'user')
+    }
+    sessionStorage.setItem('chatContext', JSON.stringify(chatContext))
+    setTimeout(() => router.push('/onboarding'), 800)
   }
 
   return (
@@ -250,19 +241,19 @@ function CurriculumChatInner() {
             <div className="border-t border-gray-100 p-4 bg-white/60">
               {chatDone ? (
                 <Button
-                  onClick={handleGenerateCurriculum}
+                  onClick={handleGoToOnboarding}
                   disabled={generating}
                   className="w-full h-14 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-bold text-base shadow-lg shadow-orange-500/20 hover:-translate-y-0.5 hover:shadow-orange-500/40 transition-all group"
                 >
                   {generating ? (
                     <div className="flex items-center gap-3">
                       <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      AI가 최종 커리큘럼을 설계하는 중...
+                      상담 내용 분석 중...
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5" />
-                      수집 완료 · 나만의 커리큘럼 생성하기
+                      상담 완료 · 맞춤형 진단 테스트 시작하기
                       <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   )}
@@ -291,114 +282,7 @@ function CurriculumChatInner() {
           </div>
         )}
 
-        {/* ── Curriculum Result ─────────────────────────────────────── */}
-        {curriculum && (
-          <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-6">
-            {/* Header */}
-            <div className="bg-white/85 backdrop-blur-xl rounded-[2rem] shadow-2xl p-8 border border-white/60">
-              <div className="flex items-start justify-between mb-4">
-                <Badge className="bg-emerald-100 text-emerald-700 border-none px-3 py-1">
-                  ✓ 설계 완료
-                </Badge>
-                <div className="text-sm text-gray-500 font-medium">
-                  총 {curriculum.totalWeeks}주 · 예상 {curriculum.totalHours}시간
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-2">
-                <Sparkles className="h-6 w-6 text-amber-500" />
-                {curriculum.title}
-              </h2>
 
-              {/* AI Insight */}
-              {curriculum.aiInsight && (
-                <div className="mt-4 p-4 rounded-2xl bg-purple-50 border border-purple-100">
-                  <div className="flex items-start gap-3">
-                    <BrainCircuit className="h-5 w-5 text-purple-600 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs font-bold text-purple-700 mb-1">AI 종합 학습 분석</p>
-                      <p className="text-sm text-purple-900 leading-relaxed">{curriculum.aiInsight}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Phases Timeline */}
-            <div className="bg-white/85 backdrop-blur-xl rounded-[2rem] shadow-2xl p-8 border border-white/60">
-              <h3 className="font-bold text-lg text-gray-800 mb-6 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-orange-500" />
-                단계별 학습 로드맵
-              </h3>
-              <div className="space-y-8">
-                {curriculum.phases.map((phase, idx) => (
-                  <div key={idx} className="relative pl-8 border-l-2 border-orange-100 last:border-transparent pb-2">
-                    <div className="absolute left-[-9px] top-0 h-4 w-4 rounded-full bg-orange-500 border-4 border-orange-100" />
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <span className="text-xs font-bold text-orange-600 block mb-0.5">
-                          Phase {phase.phaseNumber} · {phase.weekRange}
-                        </span>
-                        <h4 className="font-bold text-lg text-gray-900">{phase.title}</h4>
-                      </div>
-                      <Badge className={cn(
-                        'border-none shrink-0 ml-3',
-                        phase.riskLevel === 'high' ? 'bg-red-50 text-red-700' :
-                          phase.riskLevel === 'medium' ? 'bg-amber-50 text-amber-700' :
-                            'bg-emerald-50 text-emerald-700'
-                      )}>
-                        위험도: {phase.riskLevel.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
-                      {phase.topics.map((t, ti) => (
-                        <div key={ti} className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
-                          <div className="h-1.5 w-1.5 rounded-full bg-orange-400 shrink-0" />
-                          {t}
-                        </div>
-                      ))}
-                    </div>
-                    {phase.milestone && (
-                      <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-sm">
-                        <Trophy className="h-4 w-4 text-emerald-500" />
-                        <span className="font-medium">목표:</span> {phase.milestone}
-                      </div>
-                    )}
-                    {phase.riskReason && (
-                      <div className="mt-2 flex items-start gap-2 text-sm text-gray-500 ml-1">
-                        <AlertCircle className="h-4 w-4 mt-0.5 text-gray-400 shrink-0" />
-                        <span><span className="font-medium text-gray-600">위험 요인:</span> {phase.riskReason}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Save Button */}
-            <Button
-              onClick={handleSaveToDashboard}
-              disabled={saved}
-              className={cn(
-                'w-full h-16 rounded-2xl font-bold text-lg shadow-xl transition-all',
-                saved
-                  ? 'bg-emerald-500 text-white shadow-emerald-500/20'
-                  : 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 group'
-              )}
-            >
-              {saved ? (
-                <div className="flex items-center gap-2">
-                  <Check className="h-5 w-5" />
-                  저장되었습니다! 대시보드로 이동 중...
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  대시보드에 커리큘럼 저장하기
-                  <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              )}
-            </Button>
-          </div>
-        )}
       </div>
     </main>
   )

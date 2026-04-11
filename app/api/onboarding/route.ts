@@ -44,7 +44,7 @@ const questionSchema = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { action, goal, answers } = await req.json()
+    const { action, goal, chatContext, answers } = await req.json()
 
     // 1. 문제 생성 모드
     if (action === 'generate') {
@@ -54,14 +54,29 @@ export async function POST(req: NextRequest) {
         responseSchema: questionSchema,
       })
 
-      const prompt = `사용자의 학습 목표: "${goal}"
-      이 목표를 달성하기 위해 필요한 현재 실력을 측정할 수 있는 진단 문제 5개를 생성하세요.
-      입문부터 중급까지의 난이도를 섞어서 구성하고, 지문을 읽고 답을 선택할 수 있는 4지선다형으로 만드세요.
-      중간에 실제 코드 해석 문제나 개념 정의 문제를 포함하세요. 한글로 응답하세요.`
+      const contextSummary = chatContext 
+        ? chatContext.messages.map((m: any) => m.content).join(' | ') 
+        : "정보 없음"
+
+      const targetGoal = chatContext?.initialForm?.goal || goal || "프로그래밍"
+
+      const prompt = `당신은 엄격하고 세심한 시니어 엔지니어(면접관)입니다.
+      사용자는 챗봇 상담을 통해 자신의 학습 목표와 방법론, 어려워했던 부분을 공유했습니다.
+      이 정보를 철저히 분석하여, 사용자의 '진짜' 현재 수준을 파악할 수 있는 가장 굵은 맥락과 필수 지식을 묻는 5개의 객관식(4지선다형) 질문을 생성하세요.
+
+      [사용자 정보]
+      - 학습 목표: "${targetGoal}"
+      - 상담 내용(성향/약점): "${contextSummary}"
+
+      [문제 출제 지침]
+      1. 사용자가 취약하다고 한 부분이나 목표 기술 스택의 '핵심 개념/원리'를 날카롭게 파고드는 질문이어야 합니다.
+      2. 단순 암기(문법)가 아닌, 동작 원리나 코드 결과를 예측해야 풀 수 있는 Meticulous한 문제로 구성하세요.
+      3. 난이도를 점진적으로 높여 진짜 실력을 측정하세요. 한글로 응답하세요.`
 
       const result = await model.generateContent(prompt)
       return NextResponse.json(JSON.parse(result.response.text()))
     }
+
 
     // 2. 최종 결과 분석 모드
     const model = getGeminiModel({

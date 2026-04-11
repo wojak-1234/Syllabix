@@ -178,6 +178,32 @@ Yes (중복 질문 제거 및 방법론 중심 질문 요청).
 - Improvement Insight:
 질문 리스트 자체를 AI가 `initialForm`을 보고 실시간으로 생성하도록 변경하면 더욱 극대화된 개인화 경험을 줄 수 있음.
 
+### [Skill Usage Log]
+
+- Timestamp: 2026-04-12T03:38:00+09:00
+- Skill Name: skill-usage-logger
+
+- Context:
+Chatbot 상담 페이지에서 Onboarding 진단 테스트로 이어지는 Seamless한 워크플로우를 구축함.
+
+- Reason for Using This Skill:
+단절된 UI(Chatbot -> Dashboard -> Onboarding)를 통합하여, 사용자의 성향과 약점을 Onboarding 문제 출제 시 즉각적으로 반영하기 위함.
+
+- Execution Summary:
+1. `app/chatbot/page.tsx`: '커리큘럼 생성' 대신 `sessionStorage`에 대화 맥락(chatContext)을 저장하고 `/onboarding`으로 리디렉션하도록 수정.
+2. `app/onboarding/page.tsx`: 마운트 시 `chatContext`를 읽어 '목표 입력(Goal)' 단계를 건너뛰고 자동으로 퀴즈 렌더링 로직 실행.
+3. `app/api/onboarding/route.ts`: 프롬프트를 고도화하여 챗봇 상담 결과를 분석하고 이를 바탕으로 한 '핵심 원리 기반'의 날카로운 5가지 문제를 출제하도록 변경.
+
+- Result:
+단순한 목표 기반이 아닌, 이전 대화 내용(약점, 선호, 실패 경험)까지 아우른 진정한 의미의 '초개인화 진단 테스트' 구현 완료.
+
+- User Intervention:
+Yes (챗봇 정보를 반영한 예리한(Meticulous) 기초 지식 질문 요구).
+
+- Improvement Insight:
+진단 테스트 결과를 바탕으로 커리큘럼을 생성하는 것도 백그라운드 워커를 통해 자동으로 진행하면 사용자의 대기 시간을 더욱 쾌적하게 만들 수 있음.
+
+
 
 ### [Skill Usage Log]
 
