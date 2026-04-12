@@ -1,375 +1,194 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import CurriculumGenerator from "@/components/CurriculumGenerator"
-import { 
-  Sparkles, 
-  BrainCircuit, 
-  Trophy, 
-  BookOpen, 
-  AlertCircle,
-  ChevronRight,
-  Check,
-  Zap,
-  Clock
-} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { MOCK_KNOWLEDGE_BASE } from "@/data/mock-courses"
-import { ExternalLink, PlayCircle } from "lucide-react"
+import {
+  Sparkles,
+  BookOpen,
+  PlayCircle,
+  Trophy,
+  ChevronRight,
+  Zap,
+  Code2
+} from "lucide-react"
 
-interface CurriculumPhase {
-  phaseNumber: number
-  title: string
-  weekRange: string
-  topics: string[]
-  milestone: string
-  riskLevel: 'low' | 'medium' | 'high'
-  riskReason: string
-  linkedCourseIds?: string[]
-}
+// ── Mock Data ────────────────────────────────────────────────────────
 
-interface Curriculum {
-  title: string
-  totalWeeks: number
-  totalHours: number
-  phases: CurriculumPhase[]
-  aiInsight: string
-}
-
-export default function DashboardPage() {
-  const [curriculum, setCurriculum] = useState<Curriculum | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [saved, setSaved] = useState(false)
-
-  // 1. 세션에서 데이터 확인 및 커리큘럼 생성 트리거
-  useEffect(() => {
-    const checkAndGenerate = async () => {
-      const rawChatContext = sessionStorage.getItem('chatContext')
-      const rawOnboardingResult = sessionStorage.getItem('onboardingResult')
-      const savedCurriculum = sessionStorage.getItem('savedCurriculum')
-
-      // 이미 저장된 커리큘럼이 있으면 그것을 표시
-      if (savedCurriculum) {
-        setCurriculum(JSON.parse(savedCurriculum))
-        return
-      }
-
-      // 상담 내역과 진단 결과가 모두 있을 때만 자동 생성 시작
-      if (rawChatContext && rawOnboardingResult) {
-        setLoading(true)
-        try {
-          const chatContext = JSON.parse(rawChatContext)
-          const onboardingResult = JSON.parse(rawOnboardingResult)
-
-          const res = await fetch('/api/curriculum/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              action: 'generate',
-              messages: chatContext.messages,
-              initialForm: chatContext.initialForm,
-              onboardingResult: onboardingResult
-            })
-          })
-          const data = await res.json()
-          
-          if (data.curriculum) {
-            setCurriculum(data.curriculum)
-            sessionStorage.setItem('savedCurriculum', JSON.stringify(data.curriculum))
-          }
-        } catch (error) {
-          console.error("커리큘럼 생성 에러:", error)
-        } finally {
-          setLoading(false)
-        }
-      }
-    }
-
-    checkAndGenerate()
-  }, [])
-
-  const handleSaveToDashboard = () => {
-    setSaved(true)
-    // 실제론 DB 저장 로직이 들어갈 자리
+const MOCK_ENROLLMENTS = [
+  {
+    id: "e1",
+    seriesId: "s1",
+    seriesTitle: "파이썬 데이터 분석 마스터",
+    progressRate: 45,
+    lastLectureTitle: "Pandas 기초 다지기",
+    totalLectures: 12,
+    finishedLectures: 5
   }
+]
 
-  const handleReset = () => {
-    sessionStorage.clear()
-    window.location.reload()
+const MOCK_RECOMMENDATIONS = [
+  {
+    id: "s2",
+    title: "React를 활용한 프론트엔드 실전",
+    instructor: "김코딩 강사",
+    targetLevel: "intermediate",
+    description: "useState부터 커스텀 훅, 상태 관리까지 실무 기반의 리액트 핵심을 배웁니다.",
+    lectureCount: 15
+  },
+  {
+    id: "s3",
+    title: "Next.js 14 및 서버 컴포넌트",
+    instructor: "이넥스트 강사",
+    targetLevel: "advanced",
+    description: "Next.js의 최신 기능인 App Router와 RSC의 원리를 파악하고 실전 프로젝트를 만듭니다.",
+    lectureCount: 8
   }
+]
+
+// ── Components ───────────────────────────────────────────────────────
+
+export default function StudentDashboardPage() {
+  const [enrollments] = useState(MOCK_ENROLLMENTS)
+  const [recommendations] = useState(MOCK_RECOMMENDATIONS)
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-50/50 pb-20">
+    <main className="relative min-h-screen bg-slate-50/50 pb-20">
       <AnimatedBackground />
       <Navbar />
-      
+
       <div className="relative z-10 container mx-auto px-4 pt-28 max-w-5xl">
-        {/* Case 1: Loading State */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 animate-in fade-in zoom-in-95 duration-700">
-            <div className="relative">
-              <div className="absolute inset-0 bg-orange-400 rounded-full animate-ping opacity-20" />
-              <div className="relative h-24 w-24 bg-gradient-to-br from-orange-500 to-amber-400 rounded-3xl flex items-center justify-center shadow-2xl shadow-orange-500/20 rotate-12">
-                <BrainCircuit className="h-12 w-12 text-white animate-pulse" />
-              </div>
+        {/* Header */}
+        <div className="mb-12 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Badge className="bg-orange-100 text-orange-700 border-none px-3 py-1 flex items-center gap-1.5">
+              <Zap className="h-3 w-3" /> 내 학습 대시보드
+            </Badge>
+          </div>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+            환영합니다, 학생님! 👋
+          </h1>
+          <p className="text-gray-500 font-medium">
+            현재 <b>{enrollments.length}개</b>의 강좌를 수강하고 있습니다. 계속해서 목표를 달성해 보세요.
+          </p>
+        </div>
+
+        {/* My Enrollments Section */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <PlayCircle className="h-6 w-6 text-orange-500" /> 수강 중인 커리큘럼
+          </h2>
+          
+          {enrollments.length === 0 ? (
+            <div className="text-center py-20 bg-white/50 backdrop-blur-sm rounded-[2rem] border border-dashed border-gray-200">
+              <BookOpen className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 font-bold">아직 수강 중인 커리큘럼이 없습니다.</p>
+              <p className="text-gray-400 text-sm mt-1 mb-5">아래 추천 커리큘럼에서 나에게 맞는 강의를 찾아보세요.</p>
+              <Button onClick={() => window.location.href = '/chatbot'} className="bg-orange-600 hover:bg-orange-700 rounded-xl font-bold">
+                AI 진단받기
+              </Button>
             </div>
-            <div className="text-center space-y-3">
-              <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">당신만의 커리큘럼을 설계 중입니다</h2>
-              <p className="text-gray-500 font-medium">상담 요약과 진단 데이터를 바탕으로 최적의 학습 경로를 빚어내고 있어요...</p>
-            </div>
-            <div className="flex gap-2">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="h-3 w-3 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: `${i * 200}ms` }} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {enrollments.map((en) => (
+                <div key={en.id} className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-7 border border-white/60 shadow-lg hover:shadow-xl transition-all relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100/30 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-orange-200/50 transition-all" />
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <Badge className="bg-orange-50 text-orange-600 border-none px-2.5 py-0.5 rounded-full font-bold text-xs">
+                      수강 중
+                    </Badge>
+                    <span className="text-xs font-bold text-gray-400">
+                      {en.finishedLectures} / {en.totalLectures} 강좌
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
+                    {en.seriesTitle}
+                  </h3>
+                  <p className="text-sm font-medium text-gray-500 mb-6">
+                    다음 학습: <span className="text-gray-900 font-bold">{en.lastLectureTitle}</span>
+                  </p>
+
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-orange-500">진도율</span>
+                      <span className="text-orange-600">{en.progressRate}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-orange-400 to-amber-500 h-full rounded-full transition-all duration-1000"
+                        style={{ width: `${en.progressRate}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full h-12 rounded-xl font-bold bg-gray-900 text-white hover:bg-orange-600 transition-colors"
+                    onClick={() => window.location.href = `/learn/${en.seriesId}`}
+                  >
+                    이어서 학습하기 <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Case 2: Show Result */}
-        {!loading && curriculum && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            {/* Summary Card */}
-            <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl p-10 border border-white/60 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-orange-100/30 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-orange-200/40 transition-colors duration-700" />
-              
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-3 py-1 flex items-center gap-1.5">
-                      <Zap className="h-3 w-3" /> AI 개인화 설계
-                    </Badge>
-                  </div>
-                  <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-                    {curriculum.title}
-                  </h1>
-                </div>
-                <div className="flex items-center gap-6 bg-slate-50/80 p-5 rounded-3xl border border-slate-100 shadow-inner shrink-0">
-                  <div className="text-center px-4 border-r border-slate-200">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">전체 기간</p>
-                    <p className="text-xl font-black text-gray-900 flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-orange-500" /> {curriculum.totalWeeks}주
-                    </p>
-                  </div>
-                  <div className="text-center px-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">총 학습 시간</p>
-                    <p className="text-xl font-black text-gray-900 flex items-center gap-1.5">
-                      <Sparkles className="h-4 w-4 text-amber-500" /> {curriculum.totalHours}시간
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* AI Deep Insight */}
-              <div className="p-6 rounded-[2rem] bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 shadow-sm relative overflow-hidden group/insight">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/insight:opacity-20 transition-opacity">
-                  <BrainCircuit className="h-20 w-20 text-indigo-600" />
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                    <Sparkles className="h-5 w-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-indigo-950 mb-1 flex items-center gap-2">AI 컨설턴트 한마디</h4>
-                    <p className="text-sm text-indigo-800 leading-relaxed font-medium">{curriculum.aiInsight}</p>
-                  </div>
-                </div>
-              </div>
+        {/* AI Recommended Section */}
+        <div>
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-amber-500" /> AI 맞춤 추천 커리큘럼
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">학생님의 목표와 수준에 꼭 맞는 강좌들을 모았습니다.</p>
             </div>
+            <Button variant="outline" className="hidden sm:flex rounded-xl font-bold border-orange-200 text-orange-600 hover:bg-orange-50">
+              다시 진단받기
+            </Button>
+          </div>
 
-            {/* Phases Grid/Timeline */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 space-y-6">
-                <h3 className="text-2xl font-bold text-gray-900 px-4 flex items-center gap-3">
-                  <BookOpen className="h-6 w-6 text-orange-500" /> 단계별 학습 로드맵
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {recommendations.map(rec => (
+              <div key={rec.id} className="bg-white/60 backdrop-blur-sm rounded-3xl p-6 border border-white/60 shadow-sm hover:border-orange-200 hover:shadow-md transition-all cursor-pointer" onClick={() => window.location.href = `/series/${rec.id}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge className={cn(
+                    "border-none px-2 py-0.5 rounded-md font-bold text-[10px]",
+                    rec.targetLevel === 'beginner' ? 'bg-emerald-50 text-emerald-600' :
+                    rec.targetLevel === 'intermediate' ? 'bg-amber-50 text-amber-600' :
+                    'bg-red-50 text-red-600'
+                  )}>
+                    {rec.targetLevel === 'beginner' ? '입문' : rec.targetLevel === 'intermediate' ? '중급' : '고급'}
+                  </Badge>
+                  <span className="text-xs font-bold text-gray-400 px-2 border-l border-gray-200">
+                    {rec.instructor}
+                  </span>
+                </div>
+                
+                <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">
+                  {rec.title}
                 </h3>
-                <div className="space-y-4">
-                  {curriculum.phases.map((phase, idx) => (
-                    <div key={idx} className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-8 border border-white/60 shadow-lg hover:shadow-xl hover:translate-x-1 transition-all duration-300">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-2xl bg-orange-50 text-orange-600 font-black flex items-center justify-center text-xl shrink-0">
-                            {idx + 1}
-                          </div>
-                          <div>
-                            <span className="text-xs font-bold text-orange-500/80 tracking-widest uppercase">{phase.weekRange}</span>
-                            <h4 className="text-xl font-bold text-gray-900">{phase.title}</h4>
-                          </div>
-                        </div>
-                        <Badge className={cn(
-                          "px-4 py-1.5 rounded-full border-none font-bold text-xs shadow-sm",
-                          phase.riskLevel === 'high' ? "bg-red-50 text-red-600" :
-                          phase.riskLevel === 'medium' ? "bg-amber-50 text-amber-600" :
-                          "bg-emerald-50 text-emerald-600"
-                        )}>
-                          난이도 {phase.riskLevel.toUpperCase()}
-                        </Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                        {phase.topics.map((topic, tidx) => (
-                          <div key={tidx} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/50 border border-slate-100 text-slate-700 text-sm font-medium hover:bg-orange-50/50 hover:border-orange-100 transition-colors group/topic">
-                            <div className="h-2 w-2 rounded-full bg-orange-300 group-hover/topic:scale-125 transition-transform" />
-                            {topic}
-                          </div>
-                        ))}
-                      </div>
+                <p className="text-xs text-gray-500 mb-4 line-clamp-2 leading-relaxed">
+                  {rec.description}
+                </p>
 
-                      <div className="space-y-4 pt-6 border-t border-slate-100/50">
-                        <div className="flex items-start gap-3">
-                          <Trophy className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider mb-0.5">도달 목표</p>
-                            <p className="text-sm text-gray-700 font-medium leading-snug">{phase.milestone}</p>
-                          </div>
-                        </div>
-                        {phase.riskReason && (
-                          <div className="flex items-start gap-3">
-                            <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-[10px] font-black text-amber-700 uppercase tracking-wider mb-0.5">학습 포인트</p>
-                              <p className="text-sm text-gray-600 font-medium leading-relaxed">{phase.riskReason}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Recommended Courses (RAG Results) */}
-                      {phase.linkedCourseIds && phase.linkedCourseIds.length > 0 && (
-                        <div className="mt-6 pt-6 border-t border-dashed border-slate-200 space-y-4">
-                          <h5 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Sparkles className="h-3 w-3 text-orange-400" /> AI 추천 학습 리소스
-                          </h5>
-                          <div className="grid grid-cols-1 gap-3">
-                            {phase.linkedCourseIds.map(courseId => {
-                              const course = MOCK_KNOWLEDGE_BASE.find(c => c.id === courseId);
-                              if (!course) return null;
-                              return (
-                                <div key={courseId} className="group/course relative flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-100 hover:border-orange-200 hover:shadow-md transition-all duration-300">
-                                  <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover/course:bg-orange-500 group-hover/course:text-white transition-colors">
-                                      <PlayCircle className="h-5 w-5" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-0.5">
-                                        <h6 className="text-sm font-bold text-gray-900 leading-none truncate">{course.title}</h6>
-                                        <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-slate-100 text-slate-500 border-none font-bold shrink-0">
-                                          {course.provider}
-                                        </Badge>
-                                      </div>
-                                      <p className="text-[11px] text-gray-400 line-clamp-1">{course.description}</p>
-                                    </div>
-                                  </div>
-                                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full hover:bg-orange-50 hover:text-orange-600 transition-colors shrink-0">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between text-xs text-gray-400 font-bold pt-4 border-t border-slate-100">
+                  <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" /> 총 {rec.lectureCount}강</span>
+                  <span className="text-orange-500 group-hover:translate-x-1 transition-transform flex items-center">
+                    상세 보기 <ChevronRight className="h-3 w-3 ml-0.5" />
+                  </span>
                 </div>
               </div>
-
-              <div className="lg:col-span-4 space-y-6">
-                <div className="sticky top-28 space-y-6">
-                  <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl relative overflow-hidden group/actions">
-                    <div className="absolute -bottom-10 -right-10 p-4 opacity-5 group-hover/actions:opacity-10 transition-opacity">
-                      <Sparkles className="h-40 w-40 text-orange-500" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                       <Zap className="h-5 w-5 text-orange-500" />
-                       맞춤형 학습 관리
-                    </h3>
-                    <div className="space-y-4 relative z-10">
-                      <Button 
-                        onClick={handleSaveToDashboard}
-                        disabled={saved}
-                        className={cn(
-                          "w-full h-14 rounded-2xl font-bold text-base transition-all",
-                          saved 
-                           ? "bg-emerald-500 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" 
-                           : "bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-1 active:scale-95"
-                        )}
-                      >
-                        {saved ? (
-                          <div className="flex items-center gap-2">
-                            <Check className="h-5 w-5" /> 
-                            저장이 완료되었습니다
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            커리큘럼 저장하기
-                            <ChevronRight className="h-4 w-4" />
-                          </div>
-                        )}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={handleReset}
-                        className="w-full h-14 rounded-2xl bg-white border-orange-100 text-orange-600 hover:bg-orange-50 hover:border-orange-200 font-bold transition-all active:scale-95"
-                      >
-                        새로운 목표 설정하기
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/60 shadow-lg">
-                    <h4 className="font-bold text-gray-900 mb-4">학습 가이드</h4>
-                    <ul className="space-y-4">
-                      {[
-                        "매일 정해진 분량을 꾸준히 해내는 것이 중요합니다.",
-                        "이해가 안 되는 부분은 AI 챗봇에게 즉시 질문하세요.",
-                        "이론보다는 실습 위주로 프로젝트를 완성해보세요."
-                      ].map((tip, idx) => (
-                        <li key={idx} className="flex gap-3 text-sm text-gray-600 font-medium">
-                          <div className="h-5 w-5 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                            <Check className="h-3 w-3 text-orange-600" />
-                          </div>
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Case 3: Empty State (Starting New) */}
-        {!loading && !curriculum && (
-          <>
-            <header className="text-center mb-16 space-y-4">
-              <h1 className="bg-gradient-to-r from-orange-600 to-amber-500 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-6xl">
-                나만의 학습 여정
-              </h1>
-              <p className="mx-auto max-w-2xl text-lg text-muted-foreground font-medium">
-                당신만의 특별한 학습 목표를 설정하고, 원하시는 방향에 맞춰 AI가 최적의 커리큘럼을 설계해 드립니다.
-              </p>
-            </header>
-
-            <section className="pt-8 min-h-[600px]">
-              <div className="flex items-center justify-center gap-2 mb-10">
-                <Sparkles className="h-6 w-6 text-orange-500 animate-pulse" />
-                <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
-                  새로운 커리큘럼 생성하기
-                </h2>
-                <Sparkles className="h-6 w-6 text-orange-500 animate-pulse" />
-              </div>
-              <CurriculumGenerator />
-            </section>
-          </>
-        )}
       </div>
-      
       <Footer />
     </main>
   )

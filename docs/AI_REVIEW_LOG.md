@@ -182,5 +182,15 @@
 - **적용 스킬**: `coding-guidelines` (구조적이고 명료한 프롬프트).
 - **검증**: `next build` 성공 ✅.
 
+### [2026-04-12] v3 구조 전환 — Phase 3-A: 학생 대시보드 리뉴얼 및 수강 API
+
+- **타임스탬프**: 2026-04-12T16:55:00+09:00
+- **수행 작업**: 기존 v2 정적 커리큘럼 표시 화면을, 진행 중인 수강 목록과 RAG 기반 추천 시리즈 목록이 병렬로 나오는 v3 대시보드로 개편.
+- **AI 결과**:
+  1. `api/student/enrollments/route.ts`: 학생 번호 기반으로 수강 중인 Series 조회(GET) 및 신규 등록(POST) API 생성.
+  2. `app/dashboard/page.tsx`: 기존 코드를 걷어내고, "진행 중인 커리큘럼(Enrollments)"과 "AI 맞춤 추천(Recommendations)" 뷰를 제공하도록 UI/Mock 데이터 전면 개편.
+- **적용 스킬**: `coding-guidelines` (한 번에 하나의 명확한 목표), `nextjs-best-practices`.
+- **검증**: `next build` 성공 ✅.
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*
