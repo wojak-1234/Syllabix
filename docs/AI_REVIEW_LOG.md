@@ -223,5 +223,16 @@
 - **적용 스킬**: `ui-builder` (아코디언 애니메이션 및 시각적 위계 설정).
 - **검증**: `next build` 성공 ✅.
 
+### [2026-04-12] v3 구조 전환 — Phase 3-E: 오답노트(분석) 페이지 경로 이전 (blunders)
+
+- **타임스탬프**: 2026-04-12T17:30:00+09:00
+- **수행 작업**: 기존 `/student/error-notes` 경로를 명세서상의 `/blunders` 경로로 이전.
+- **AI 결과**:
+  1. `app/blunders/page.tsx`: 이전 오답노트의 고도화된 UI(토글, 강의 정보 포함)를 그대로 이관.
+  2. `app/dashboard/page.tsx`: 대시보드 내 진입 링크를 `/blunders`로 업데이트.
+  3. `app/student/error-notes/`: 불필요해진 기존 폴더 및 파일 삭제.
+- **적용 스킬**: `ui-builder` (경로 변경 후에도 깨지지 않는 UI 일치성 유지).
+- **검증**: `next build` 성공 ✅.
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*

@@ -80,11 +80,11 @@ export default function StudentDashboardPage() {
           </div>
           
           <Button 
-            onClick={() => window.location.href='/student/error-notes'}
+            onClick={() => window.location.href='/blunders'}
             variant="outline"
             className="h-12 bg-white/50 backdrop-blur-sm border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl font-bold shadow-sm flex items-center gap-2 px-5"
           >
-             <AlertTriangle className="h-4 w-4" /> 나의 오답 노트 보기
+             <AlertTriangle className="h-4 w-4" /> 나의 다빈도 실수 분석 (Blunders)
           </Button>
         </div>
 
