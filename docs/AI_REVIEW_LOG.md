@@ -171,5 +171,16 @@
 - **적용 스킬**: `coding-guidelines` (최소한의 복잡성으로 MVP 플로우 먼저 구성), `nextjs-best-practices` (클라이언트 상태 로직 격리).
 - **검증**: `next build` 성공 ✅ (에러 미검출). Mock 데이터를 사용한 UI 동작 확인.
 
+### [2026-04-12] v3 구조 전환 — Phase 2-C: AI 문제 생성 API
+
+- **타임스탬프**: 2026-04-12T16:48:00+09:00
+- **수행 작업**: Teacher가 강좌의 요소(퀴즈 및 코딩테스트)를 생성할 때 사용하는 AI 생성 API 구축.
+- **AI 결과**:
+  1. `lib/prompts.ts`: `buildGenerateQuizPrompt`, `buildGenerateCodingTestPrompt` 두 주요 AI 프롬프트 빌더 추가.
+  2. `api/teacher/coding-test/generate/route.ts`: 코딩테스트 생성 엔드포인트 구축, MODELS.PRO 적용 (API 최적화 방침 준수).
+  3. `api/teacher/quiz/generate/route.ts`: 퀴즈 생성 엔드포인트 구축, MODELS.STANDARD 적용.
+- **적용 스킬**: `coding-guidelines` (구조적이고 명료한 프롬프트).
+- **검증**: `next build` 성공 ✅.
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*

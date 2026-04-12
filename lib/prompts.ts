@@ -138,3 +138,63 @@ export function buildOnboardingQuestionPrompt(params: {
 4. ${COMMON_RULES.NO_LABEL_ABCD}
 ${COMMON_RULES.LANGUAGE}`
 }
+
+// ── Teacher 출제용 프롬프트 빌더 (v3) ─────────────────────────────
+
+export function buildGenerateQuizPrompt(params: {
+  lectureTitle: string
+  learningObjective: string
+  conceptTags: string[]
+  count: number
+}): string {
+  return `${SYSTEM_ROLES.EVALUATOR}
+
+강좌 정보에 맞춰 객관식 퀴즈 ${params.count}개를 생성하세요.
+
+[강좌 정보]
+- 강좌명: ${params.lectureTitle}
+- 학습 목표: ${params.learningObjective}
+- 핵심 개념 태그: ${params.conceptTags.join(', ')}
+
+[출제 지침]
+1. 단순 암기보다는 원리를 이해했는지 묻는 문제를 출제하세요.
+2. 각 문제는 4개의 선택지를 가져야 합니다.
+3. 정답이 여러 개이거나 전혀 없는 문제가 없도록 명확히 하세요.
+4. 각 문제에 대한 명확한 해설과 어떤 개념 태그를 평가하는지 명시하세요.
+5. ${COMMON_RULES.NO_LABEL_ABCD}
+
+${COMMON_RULES.LANGUAGE} ${COMMON_RULES.JSON_ONLY}
+응답 형식: { "quizzes": [{ "question": "...", "choices": [{ "label": "...", "isCorrect": true/false }], "explanation": "...", "conceptTag": "..." }] }`
+}
+
+export function buildGenerateCodingTestPrompt(params: {
+  lectureTitle: string
+  learningObjective: string
+  conceptTags: string[]
+}): string {
+  return `${SYSTEM_ROLES.SENIOR_ENGINEER}
+
+강좌 정보에 맞는 실전 코딩테스트 문제를 1개 출제하세요.
+
+[강좌 정보]
+- 강좌명: ${params.lectureTitle}
+- 학습 목표: ${params.learningObjective}
+- 핵심 개념 태그: ${params.conceptTags.join(', ')}
+
+[출제 지침]
+1. 해당 강좌의 개념을 체화할 수 있는 문제여야 합니다.
+2. 보일러플레이트 코드(starterCode)를 제공하여 학생이 핵심 로직만 짤 수 있게 하세요.
+3. 채점를 위한 테스트케이스 2~3개와 정답 코드(solutionCode)를 포함하세요.
+4. '코딩테스트' 형식이지만 백준/프로그래머스 같은 형식적인 입출력이 아니라 함수의 구현 부분만 완성하는 형식(Solution 클래스 등)을 권장합니다.
+
+${COMMON_RULES.LANGUAGE} ${COMMON_RULES.JSON_ONLY}
+응답 형식: {
+  "title": "...",
+  "description": "문제 상세 설명...",
+  "starterCode": "def solution(arr):\\n    pass",
+  "testCases": [{ "input": "...", "expectedOutput": "..." }],
+  "solutionCode": "...",
+  "gradingCriteria": "...",
+  "conceptTag": "..."
+}`
+}
