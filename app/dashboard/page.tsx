@@ -14,7 +14,8 @@ import {
   Trophy,
   ChevronRight,
   Zap,
-  Code2
+  Code2,
+  AlertTriangle
 } from "lucide-react"
 
 // ── Mock Data ────────────────────────────────────────────────────────
@@ -63,18 +64,28 @@ export default function StudentDashboardPage() {
 
       <div className="relative z-10 container mx-auto px-4 pt-28 max-w-5xl">
         {/* Header */}
-        <div className="mb-12 space-y-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge className="bg-orange-100 text-orange-700 border-none px-3 py-1 flex items-center gap-1.5">
-              <Zap className="h-3 w-3" /> 내 학습 대시보드
-            </Badge>
+        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge className="bg-orange-100 text-orange-700 border-none px-3 py-1 flex items-center gap-1.5">
+                <Zap className="h-3 w-3" /> 내 학습 대시보드
+              </Badge>
+            </div>
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+              환영합니다, 학생님! 👋
+            </h1>
+            <p className="text-gray-500 font-medium">
+              현재 <b>{enrollments.length}개</b>의 강좌를 수강하고 있습니다. 계속해서 목표를 달성해 보세요.
+            </p>
           </div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-            환영합니다, 학생님! 👋
-          </h1>
-          <p className="text-gray-500 font-medium">
-            현재 <b>{enrollments.length}개</b>의 강좌를 수강하고 있습니다. 계속해서 목표를 달성해 보세요.
-          </p>
+          
+          <Button 
+            onClick={() => window.location.href='/student/error-notes'}
+            variant="outline"
+            className="h-12 bg-white/50 backdrop-blur-sm border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl font-bold shadow-sm flex items-center gap-2 px-5"
+          >
+             <AlertTriangle className="h-4 w-4" /> 나의 오답 노트 보기
+          </Button>
         </div>
 
         {/* My Enrollments Section */}
