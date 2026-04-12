@@ -374,3 +374,61 @@ Yes (계획 수립 후 승인 요청 → 전체 실행 지시).
 
 - Improvement Insight:
 `api/analytics/blind-point`와 `api/chat`에도 동일한 MODELS 티어 및 캐싱 패턴을 적용하면 나머지 미적용 구간도 최적화 완성됨.
+
+---
+
+### Session: 2026-04-12 (16:23 ~ 16:34) — v3 구조 전환
+
+#### Skill: v3 Gap Analysis 및 구조 전환 계획 수립
+- Timestamp: 2026-04-12T16:23:00+09:00
+- Task Description:
+project-overview.md v3 확정 구조와 현재 코드베이스 간의 차이를 전수 분석하고, 5단계 작업 계획(Phase 1~5)을 수립.
+
+- Reason for Using This Skill:
+v2→v3 구조 변경 범위가 DB 스키마부터 Teacher/Student UI 전면 재구축까지 포괄하므로, 체계적인 Gap 분석 없이는 작업 누락 위험이 높음.
+
+- Execution Summary:
+1. project-overview.md diff 분석: 커리큘럼 주체 역전(학생→강사), 수요 예측 제거, 오답노트 신규 등 7가지 핵심 변경사항 도출.
+2. 현재 코드베이스 전수 조사: `app/`, `components/`, `lib/`, `prisma/`, `data/` 전체 파일 검토.
+3. 영역별 변경 사항 정리: DB 스키마, Teacher 영역, Student 영역, 프롬프트 시스템, 유지 가능 부분.
+4. 작업 우선순위 Phase 1~5 정의.
+5. Claude API → Gemini API 유지 확인 및 문서 수정 포인트 명시.
+
+- Result:
+Gap 분석 아티팩트 문서 생성 (`v3_gap_analysis.md`). 전체 변경 범위와 우선순위가 명확히 정의됨.
+
+- User Intervention:
+Yes (v3 문서 제공, Claude→Gemini 유지 지시).
+
+#### Skill: Phase 1 — Prisma 스키마 전면 재설계
+- Timestamp: 2026-04-12T16:27:00+09:00
+- Task Description:
+v3 구조에 맞게 Prisma 데이터베이스 스키마를 전면 재설계하고 인프라를 정비.
+
+- Reason for Using This Skill:
+기존 `Curriculum` (학생 소유, phases JSON) 구조가 v3의 "강사 설계 + 학생 Join" 패러다임과 근본적으로 불일치.
+
+- Execution Summary:
+1. `prisma/schema.prisma` 전면 교체:
+   - `Curriculum` → `Series` (강사 소유, 상태/공개 설정 포함)
+   - `Lecture`: Series 종속, `order`, `learningObjective`, `conceptTags` 필드 추가
+   - `Enrollment`: 학생-Series Join 관계, 진도 추적
+   - `Quiz`: Lecture 종속, 선택지 JSON, 개념 태그
+   - `CodingTest`: Lecture 종속, 입출력 예시, 정답코드, 채점기준
+   - `Submission`: 최대 3회 제출, 코드 스냅샷, 에러 분류, AI 힌트 저장
+   - `ErrorNote`: 퀴즈 오답/코딩 3회 실패 시 자동 생성, 보충 학습 연결
+   - `ActivityLog`, `BlindPoint`: 기존 유지
+2. Prisma 5.22 설치 (`devDependencies`).
+3. `.env` 파일 생성 (Prisma CLI용 DATABASE_URL 분리).
+4. `.gitignore`에 `.env` 추가.
+5. `prisma validate` → `prisma generate` → `prisma format` 모두 통과.
+
+- Result:
+v3 구조를 지원하는 10개 모델의 관계형 스키마 확정. Prisma Client 생성 완료.
+
+- User Intervention:
+No (Phase 1 진행 지시에 따라 자율 실행).
+
+- Improvement Insight:
+실제 PostgreSQL 연결 후 `prisma migrate dev`로 마이그레이션 수행 필요. 현재는 placeholder URL이므로 스킵.
+

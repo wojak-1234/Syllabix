@@ -130,4 +130,22 @@
 - **사용자 피드백**: 코드 유지보수성 향상 및 API 사용량 절감 방안 강구 요청 반영.
 
 ---
+
+### [2026-04-12] v3 구조 전환 — Phase 1: 인프라 (스키마 재설계)
+
+- **타임스탬프**: 2026-04-12T16:27:00+09:00
+- **수행 작업**: project-overview.md v3 확정 구조에 맞춰 Prisma 데이터베이스 스키마 전면 재설계.
+- **AI 결과**:
+  1. **구조 분석**: v2→v3 변경사항 전수 분석 후 Gap Analysis 문서 작성 (5개 영역, 작업 우선순위 Phase 1~5 정의).
+  2. **스키마 재설계**: 기존 `Curriculum` 모델 → `Series` (강사 소유)로 교체. `Lecture`를 Series 종속 구조로 변경.
+  3. **신규 모델 6개 추가**: `Enrollment` (수강 등록), `Quiz` (퀴즈), `CodingTest` (코딩테스트), `Submission` (제출 스냅샷, 최대 3회), `ErrorNote` (오답노트), Enum (`SeriesVisibility`, `SeriesStatus`).
+  4. **인프라 정비**: Prisma 5.22 설치, `.env` 파일 분리 (Prisma CLI 호환), `.gitignore` 업데이트.
+  5. **검증**: `prisma validate` ✅, `prisma generate` ✅, `prisma format` ✅ 모두 통과.
+- **사용자 피드백**: v3 문서 기반 Phase 1 진행 지시. Claude API 대신 Gemini API 유지 확인.
+- **의사결정 근거**:
+  - 커리큘럼 설계 주체를 학생→강사로 변경하면서, `Curriculum` (학생 소유, phases JSON) 구조가 근본적으로 부적합해져 `Series` + `Lecture` 관계형 구조로 전면 교체.
+  - `Submission`에 `attemptNumber` unique 제약 추가하여 3회 제출 제한을 DB 레벨에서 보장.
+  - `ErrorNote`는 Quiz/CodingTest 양쪽 소스를 `sourceType` + `sourceId`로 다형적(polymorphic) 참조.
+
+---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*

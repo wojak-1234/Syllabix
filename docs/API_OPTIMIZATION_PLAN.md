@@ -83,3 +83,30 @@ export const MODELS = {
 - [x] `lib/prompts.ts` 프롬프트 중앙화
 - [x] `api/curriculum/chat` 질문 사전 생성 방식으로 리팩토링 (3회→1회)
 - [x] `api/curriculum/chat?action=generate` 캐싱 추가
+
+---
+
+## v3 구조 전환 영향 (2026-04-12)
+
+> project-overview.md v3 확정에 따라, 기존 최적화 대상 일부가 **제거/교체**됨.
+
+### 제거된 API
+| 엔드포인트 | 사유 |
+|---|---|
+| `api/teacher/demand` | v3에서 수요 예측 기능 제거 |
+| `api/curriculum/chat?action=generate` | 학생 커리큘럼 자동 생성 → 추천+Join으로 교체 |
+
+### 신규 예상 API (Phase 2~3에서 구현)
+| 엔드포인트 | 목적 | 예상 모델 | 캐싱 계획 |
+|---|---|---|---|
+| `api/teacher/series` | Series CRUD | N/A (DB only) | ❌ |
+| `api/teacher/coding-test/generate` | AI 코딩테스트 생성 | MODELS.PRO | ✅ |
+| `api/student/recommend` | 커리큘럼 추천 (RAG) | MODELS.STANDARD | ✅ |
+| `api/student/hint` | 소크라테스 힌트 | MODELS.LITE | ❌ (매회 다름) |
+| `api/student/error-note/generate` | 오답노트 생성 | MODELS.STANDARD | ✅ |
+
+### DB 스키마 변경 요약
+- `Curriculum` → `Series` (강사 소유) + `Lecture` (종속)
+- 신규: `Enrollment`, `Quiz`, `CodingTest`, `Submission`, `ErrorNote`
+- 기존 유지: `ActivityLog`, `BlindPoint`
+

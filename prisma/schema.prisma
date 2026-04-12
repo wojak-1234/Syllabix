@@ -10,65 +10,213 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ── Enums ────────────────────────────────────────────────────────────
+
 enum UserRole {
   STUDENT
   TEACHER
 }
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  role          UserRole  @default(STUDENT)
-  curriculums   Curriculum[]
-  activities    ActivityLog[]
-  blindPoints   BlindPoint[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+enum SeriesVisibility {
+  PUBLIC // 전체 공개
+  LINK_ONLY // 링크 공개
+  PRIVATE // 비공개
 }
 
-model Curriculum {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  title         String
-  goal          String
-  currentLevel  String
-  phases        Json      // 주차별 로드맵 데이터 (배열 형태 저장)
-  aiInsight     String?   // AI가 분석한 이탈 위험 구간 등
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+enum SeriesStatus {
+  DRAFT // 작성 중
+  PUBLISHED // 공개됨
 }
+
+// ── User ─────────────────────────────────────────────────────────────
+
+model User {
+  id    String   @id @default(cuid())
+  email String   @unique
+  name  String?
+  role  UserRole @default(STUDENT)
+
+  // Teacher relations
+  series      Series[] // 강사가 만든 커리큘럼
+  // Student relations
+  enrollments Enrollment[] // 학생이 Join한 커리큘럼
+  submissions Submission[] // 학생의 코딩테스트 제출
+  errorNotes  ErrorNote[] // 학생의 오답노트
+  activities  ActivityLog[]
+  blindPoints BlindPoint[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Series (커리큘럼) ── Teacher가 설계, Student가 Join ──────────────
+
+model Series {
+  id        String @id @default(cuid())
+  teacherId String
+  teacher   User   @relation(fields: [teacherId], references: [id])
+
+  title       String // 커리큘럼 제목
+  description String? // 커리큘럼 설명
+  targetLevel String // 대상 수준 (beginner / intermediate / advanced)
+  goal        String? // 목표 수강자 설정
+
+  status     SeriesStatus     @default(DRAFT)
+  visibility SeriesVisibility @default(PRIVATE)
+
+  lectures    Lecture[] // 소속 강좌 목록
+  enrollments Enrollment[] // 수강 등록
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Lecture (강좌) ── Series에 종속 ──────────────────────────────────
 
 model Lecture {
-  id            String    @id @default(cuid())
-  title         String
-  content       String    // 스크립트 또는 강의 본문 (RAG용)
-  videoUrl      String?
-  tags          String[]
-  difficulty    String
-  createdAt     DateTime  @default(now())
+  id       String @id @default(cuid())
+  seriesId String
+  series   Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  order             Int // 강좌 순서 (드래그로 조정)
+  title             String
+  learningObjective String // 학습 목표 (필수 — RAG 앵커)
+  conceptTags       String[] // 핵심 개념 태그 (필수 — Blind Point 매칭 기준)
+  content           String? // 강의 본문 / 스크립트 (RAG용)
+  attachmentUrl     String? // 첨부파일 URL (PDF, 슬라이드)
+
+  quizzes     Quiz[]
+  codingTests CodingTest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seriesId, order])
 }
+
+// ── Enrollment (수강 등록) ── 학생이 Series를 Join ───────────────────
+
+model Enrollment {
+  id        String @id @default(cuid())
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+  seriesId  String
+  series    Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  currentLectureId    String? // 현재 진행 중인 강좌 ID
+  completedLectureIds String[] // 완료한 강좌 ID 목록
+  progress            Float    @default(0) // 진도율 (0.0 ~ 1.0)
+
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, seriesId])
+}
+
+// ── Quiz (퀴즈) ── Lecture에 종속 ────────────────────────────────────
+
+model Quiz {
+  id        String  @id @default(cuid())
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  order       Int // 퀴즈 순서
+  question    String // 문제
+  choices     Json // 선택지 배열 [{ label: string, isCorrect: boolean }]
+  explanation String? // 정답 해설
+  conceptTag  String? // 이 문제가 평가하는 개념
+
+  createdAt DateTime @default(now())
+}
+
+// ── CodingTest (코딩테스트) ── Lecture에 종속 ────────────────────────
+
+model CodingTest {
+  id        String  @id @default(cuid())
+  lectureId String
+  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  order           Int // 코딩테스트 순서
+  title           String // 문제 제목
+  description     String // 문제 설명
+  starterCode     String? // 초기 코드 (보일러플레이트)
+  testCases       Json // 입출력 예시 [{ input: string, expectedOutput: string }]
+  solutionCode    String? // 정답 코드 (채점 기준)
+  gradingCriteria String? // 채점 기준 설명
+  conceptTag      String? // 평가 대상 개념
+
+  submissions Submission[]
+
+  createdAt DateTime @default(now())
+}
+
+// ── Submission (코딩테스트 제출) ── 최대 3회 ─────────────────────────
+
+model Submission {
+  id           String     @id @default(cuid())
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id])
+  codingTestId String
+  codingTest   CodingTest @relation(fields: [codingTestId], references: [id], onDelete: Cascade)
+
+  attemptNumber Int // 시도 번호 (1, 2, 3)
+  code          String // 제출한 코드 스냅샷
+  passed        Boolean @default(false)
+  errorType     String? // SyntaxError, TypeError, LogicError, RuntimeError
+  errorMessage  String? // 에러 메시지 원문
+  aiHint        String? // AI가 제공한 소크라테스 힌트
+
+  submittedAt DateTime @default(now())
+
+  @@unique([studentId, codingTestId, attemptNumber])
+}
+
+// ── ErrorNote (오답노트) ── 퀴즈 오답 or 코딩테스트 3회 실패 시 생성 ─
+
+model ErrorNote {
+  id        String @id @default(cuid())
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  sourceType     String // QUIZ or CODING_TEST
+  sourceId       String // Quiz.id 또는 CodingTest.id
+  problemTitle   String // 문제명
+  errorType      String? // 에러 유형 (코딩테스트인 경우)
+  wrongReason    String // 틀린 이유 (AI 분석)
+  relatedConcept String // 관련 개념
+  attemptCount   Int // 시도 횟수
+  codeSnapshots  Json? // 코드 스냅샷 배열 (코딩테스트인 경우)
+
+  // 보충 학습 연결
+  relatedLectureId String? // 관련 강좌 ID (RAG 검색 결과)
+  supplementNote   String? // "이 개념을 다시 확인해보세요" + 보충 정보
+  isResolved       Boolean @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+// ── ActivityLog (기존 유지) ──────────────────────────────────────────
 
 model ActivityLog {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  type          String    // QUIZ_ANSWER, IDE_ATTEMPT, VIDEO_VIEW
-  content       Json      // 제출한 코드, 퀴즈 점수 등 상세 데이터
-  lectureId     String?
-  createdAt     DateTime  @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String // QUIZ_ANSWER, CODING_SUBMIT, LECTURE_VIEW
+  content   Json // 상세 데이터
+  lectureId String?
+  createdAt DateTime @default(now())
 }
 
+// ── BlindPoint (기존 유지 — MVP "있으면 강한 것") ────────────────────
+
 model BlindPoint {
-  id                String    @id @default(cuid())
-  userId            String
-  user              User      @relation(fields: [userId], references: [id])
-  concept           String    // 식별된 취약 개념 (예: "Closure")
-  confidence        Float     // AI의 분석 신뢰도
-  evidence          String    // 분석 근거 (어떤 로그를 기반으로 판단했는지)
-  status            String    @default("DETECTED") // DETECTED, RESOLVED
-  suggestedAction   String?   // AI의 추천 조치 (기존 강의 재수강 등)
-  createdAt         DateTime  @default(now())
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  concept         String // 식별된 취약 개념 (예: "Closure")
+  confidence      Float // AI의 분석 신뢰도
+  evidence        String // 분석 근거 (어떤 로그를 기반으로 판단했는지)
+  status          String   @default("DETECTED") // DETECTED, RESOLVED
+  suggestedAction String? // AI의 추천 조치 (기존 강의 재수강 등)
+  createdAt       DateTime @default(now())
 }
