@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -13,7 +13,9 @@ import {
   RefreshCcw,
   Sparkles,
   Sun,
-  Moon
+  Moon,
+  ChevronRight,
+  X
 } from "lucide-react"
 
 // ── Mock Data ────────────────────────────────────────────────────────
@@ -42,16 +44,12 @@ export default function CodingTestPage() {
   const [hint, setHint] = useState<string | null>(null)
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [showErrorNote, setShowErrorNote] = useState(false)
+  const [dismissErrorNote, setDismissErrorNote] = useState(false)
   
   // 테마 (light/dark)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   const handleRunCode = () => {
-    if (attempts >= testBase.maxAttempts && result !== 'success') {
-      setShowErrorNote(true)
-      return
-    }
-
     setIsEvaluating(true)
     
     setTimeout(() => {
@@ -66,47 +64,13 @@ export default function CodingTestPage() {
         if (newAttempts < testBase.maxAttempts) {
           setHint("조건문 인덱싱을 활용해본 적이 있나요? `df[조건]` 형태를 어떻게 적용할 수 있을지 생각해보세요.")
         } else {
+          // 기회 3번 소진 시 오답노트 알림 표시 (계속 시도는 가능)
+          setHint("DataFrame의 인덱싱 문법에 대한 이해가 부족한 것으로 보입니다. 불리언 인덱싱의 원리를 다시 한번 확인해보는 것이 좋습니다.")
           setShowErrorNote(true)
         }
       }
       setIsEvaluating(false)
     }, 1500)
-  }
-
-  if (showErrorNote) {
-    return (
-      <main className="relative h-screen bg-slate-50 flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] p-8 max-w-lg w-full shadow-2xl border border-slate-100 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-orange-500" />
-            <div className="h-16 w-16 mx-auto bg-red-50 rounded-2xl flex items-center justify-center mb-6">
-              <AlertCircle className="h-8 w-8 text-red-500" />
-            </div>
-            <h2 className="text-2xl font-black text-gray-900 mb-2">오답 노트가 생성되었습니다</h2>
-            <p className="text-gray-500 mb-8">
-              제출 횟수 설정치({testBase.maxAttempts}회)를 초과하였습니다.<br/>
-              AI가 분석한 나의 약점을 인지하고 오답 노트를 복습해보세요.
-            </p>
-            
-            <div className="bg-orange-50/50 border border-orange-100 rounded-2xl p-5 mb-8 text-left">
-               <h4 className="text-sm font-bold text-orange-900 flex items-center gap-2 mb-2">
-                 <Sparkles className="h-4 w-4 text-orange-500" /> AI의 약점 분석
-               </h4>
-               <p className="text-sm text-orange-800 leading-relaxed">
-                 DataFrame의 인덱싱 문법에 대한 이해가 부족한 것으로 보입니다. 불리언 인덱싱의 원리를 다시 한번 확인해보는 것이 좋습니다.
-               </p>
-            </div>
-
-            <Button 
-              className="w-full h-12 rounded-xl font-bold bg-gray-900 text-white hover:bg-orange-600"
-              onClick={() => window.location.href='/dashboard'}
-            >
-              대시보드로 돌아가기
-            </Button>
-          </div>
-        </div>
-      </main>
-    )
   }
 
   const isDark = theme === 'dark'
@@ -117,17 +81,38 @@ export default function CodingTestPage() {
       isDark ? "bg-slate-900 text-slate-300" : "bg-slate-50 text-slate-900"
     )}>
 
-      <div className="flex-1 flex h-full"> {/* 상단 Navbar 공간을 띄우지 않고 꽉 채움 */}
+      {/* 오답 노트 생성 Notification (기회 소진 시 표시) */}
+      {showErrorNote && !dismissErrorNote && (
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-500">
+          <div className="bg-white rounded-2xl shadow-2xl border border-red-100 flex items-start gap-4 p-4 pr-12 max-w-lg relative">
+            <button 
+              onClick={() => setDismissErrorNote(true)}
+              className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="h-10 w-10 flex-shrink-0 bg-red-50 rounded-full flex items-center justify-center mt-1">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-900 mb-1">오답 노트가 자동 생성되었습니다.</p>
+              <p className="text-xs text-slate-500 leading-relaxed font-medium">제출 횟수({testBase.maxAttempts}회)를 초과하여 약점 분석과 오답 노트가 기록되었습니다. <br/>물론 코딩테스트는 정답을 맞출 때까지 <b className="text-slate-900">계속해서 시도</b>하실 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex h-full"> 
         
         {/* Left: Problem Description */}
         <div className={cn(
           "w-[400px] flex flex-col overflow-y-auto no-scrollbar border-r transition-colors duration-500",
           isDark ? "bg-slate-800/50 border-slate-700/50" : "bg-white border-slate-200 shadow-sm z-10"
         )}>
-          <div className="p-8"> {/* 약간의 패딩 증가 (상단 여유) */}
+          <div className="p-8">
             <div className="flex items-center justify-between mb-8">
                <button
-                 onClick={() => window.history.back()}
+                 onClick={() => window.location.href = '/learn/s1'}
                  className={cn(
                    "flex items-center gap-1.5 text-xs font-medium transition-colors",
                    isDark ? "text-slate-400 hover:text-white" : "text-gray-500 hover:text-orange-600"
@@ -136,7 +121,6 @@ export default function CodingTestPage() {
                  <ChevronLeft className="h-3 w-3" /> 이전으로
                </button>
                
-               {/* 테마 스위치 */}
                <button 
                  onClick={() => setTheme(isDark ? 'light' : 'dark')}
                  className={cn(
@@ -208,9 +192,9 @@ export default function CodingTestPage() {
         </div>
 
         {/* Right: Code Editor & Runner */}
-        <div className="flex-1 flex flex-col z-0">
+        <div className="flex-1 flex flex-col z-0 relative">
            <div className={cn(
-             "h-12 border-b flex items-center justify-between px-4 transition-colors duration-500",
+             "h-14 border-b flex items-center justify-between px-4 transition-colors duration-500",
              isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200 shadow-sm z-10"
            )}>
              <div className="flex items-center gap-3">
@@ -225,33 +209,38 @@ export default function CodingTestPage() {
                )}>solution.py</span>
              </div>
              
-             {/* Submission Limit Indicator */}
+             {/* Submission Panel */}
              <div className="flex items-center gap-4">
-               <div className="flex items-center gap-1.5">
+               {/* 3회 시도가 넘어가면 스킵 버튼을 노출 */}
+               {showErrorNote && result !== 'success' && (
+                 <Button 
+                   variant="ghost" 
+                   onClick={() => window.location.href='/dashboard'}
+                   className={cn(
+                     "h-8 rounded-lg text-xs font-bold transition-all px-3 flex items-center gap-1.5",
+                     isDark ? "text-slate-400 hover:bg-slate-700 hover:text-white" : "text-slate-500 hover:bg-slate-100"
+                   )}
+                 >
+                   넘어가기 <ChevronRight className="h-3 w-3" />
+                 </Button>
+               )}
+               
+               <div className="flex items-center gap-2">
                  <span className={cn(
-                   "text-xs font-bold uppercase tracking-widest",
-                   isDark ? "text-slate-400" : "text-slate-400"
-                 )}>제출 기회</span>
-                 <div className="flex gap-1">
-                   {[...Array(testBase.maxAttempts)].map((_, i) => (
-                     <div 
-                       key={i} 
-                       className={cn("h-1.5 w-6 rounded-full transition-all", 
-                         i < attempts 
-                           ? (isDark ? "bg-red-500/50" : "bg-red-200")
-                           : (isDark ? "bg-emerald-500" : "bg-emerald-500")
-                       )} 
-                     />
-                   ))}
-                 </div>
+                   "text-[10px] font-bold uppercase tracking-widest",
+                   isDark ? "text-slate-500" : "text-slate-400"
+                 )}>
+                   시도 횟수 : {attempts} {attempts >= testBase.maxAttempts && '(오답 반영)'}
+                 </span>
                </div>
+
                <Button 
                   onClick={handleRunCode}
-                  disabled={isEvaluating || result === 'success' || attempts >= testBase.maxAttempts}
+                  disabled={isEvaluating || result === 'success'}
                   className={cn(
                     "h-8 rounded-lg text-xs font-bold transition-all px-4 shadow-sm",
                     isEvaluating ? "bg-slate-400 text-white" :
-                    result === 'success' ? "bg-emerald-600 text-white" :
+                    result === 'success' ? "bg-emerald-600 text-white hover:bg-emerald-700" :
                     "bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20"
                   )}
                >
@@ -274,7 +263,7 @@ export default function CodingTestPage() {
              <textarea
                value={code}
                onChange={(e) => setCode(e.target.value)}
-               disabled={result === 'success' || attempts >= testBase.maxAttempts}
+               disabled={result === 'success'}
                spellCheck="false"
                className={cn(
                  "absolute inset-0 w-full h-full p-6 bg-transparent font-mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-0 disabled:opacity-50 transition-colors",
@@ -287,13 +276,21 @@ export default function CodingTestPage() {
            {hint && result !== 'success' && (
              <div className={cn(
                "border-t p-4 animate-in slide-in-from-bottom-2 duration-300",
-               isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-800"
+               isDark ? (showErrorNote ? "border-red-500/30 bg-red-500/10 text-red-200" : "border-amber-500/30 bg-amber-500/10 text-amber-200") 
+                      : (showErrorNote ? "border-red-200 bg-red-50 text-red-800" : "border-amber-200 bg-amber-50 text-amber-800")
              )}>
                <div className="max-w-4xl mx-auto flex items-start gap-3">
-                 <Lightbulb className={cn("h-5 w-5 shrink-0 mt-0.5", isDark ? "text-amber-400" : "text-amber-600")} />
+                 {showErrorNote ? (
+                   <AlertCircle className={cn("h-5 w-5 shrink-0 mt-0.5", isDark ? "text-red-400" : "text-red-600")} />
+                 ) : (
+                   <Lightbulb className={cn("h-5 w-5 shrink-0 mt-0.5", isDark ? "text-amber-400" : "text-amber-600")} />
+                 )}
                  <div>
-                   <h4 className={cn("text-sm font-bold mb-1", isDark ? "text-amber-500" : "text-amber-700")}>
-                     소크라테스 힌트 도착!
+                   <h4 className={cn(
+                     "text-sm font-bold mb-1", 
+                     isDark ? (showErrorNote ? "text-red-400" : "text-amber-500") : (showErrorNote ? "text-red-700" : "text-amber-700")
+                   )}>
+                     {showErrorNote ? "AI 약점 피드백" : "소크라테스 힌트 도착!"}
                    </h4>
                    <p className="text-sm font-medium leading-relaxed opacity-90">{hint}</p>
                  </div>
