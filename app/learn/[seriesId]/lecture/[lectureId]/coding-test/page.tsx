@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from "react"
-import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -77,7 +76,6 @@ export default function CodingTestPage() {
   if (showErrorNote) {
     return (
       <main className="relative h-screen bg-slate-50 flex flex-col">
-        <Navbar />
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="bg-white rounded-[2rem] p-8 max-w-lg w-full shadow-2xl border border-slate-100 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-orange-500" />
@@ -118,12 +116,6 @@ export default function CodingTestPage() {
       "relative h-screen flex flex-col overflow-hidden transition-colors duration-500",
       isDark ? "bg-slate-900 text-slate-300" : "bg-slate-50 text-slate-900"
     )}>
-      {/* 슬라이드 다운 네비게이션 : 화면 맨 위에 호버 존을 만들어 접근 시 내려오게 함 */}
-      <div className="absolute top-0 left-0 right-0 h-4 z-50 group">
-        <div className="absolute top-0 inset-x-0 transform -translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out shadow-xl">
-          <Navbar />
-        </div>
-      </div>
 
       <div className="flex-1 flex h-full"> {/* 상단 Navbar 공간을 띄우지 않고 꽉 채움 */}
         
