@@ -58,10 +58,11 @@ export default function SeriesLearnPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-full border-4 border-slate-100 flex items-center justify-center relative">
-                 <svg className="absolute inset-0 w-full h-full -rotate-90">
+                 <svg viewBox="0 0 64 64" className="absolute inset-0 w-full h-full -rotate-90 overflow-visible">
                     <circle
                       cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" 
                       className="text-orange-500" fill="none"
+                      strokeLinecap="round"
                       strokeDasharray="175" strokeDashoffset={175 - (175 * detail.progressRate) / 100}
                     />
                  </svg>

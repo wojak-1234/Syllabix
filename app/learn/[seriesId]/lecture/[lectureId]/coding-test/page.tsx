@@ -5,16 +5,16 @@ import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-// Monaco 에디터는 이 MVP에 맞춰 textarea나 간단한 pre로 모사합니다. 실제 서비스시 @monaco-editor/react 등을 붙입니다.
 import {
-  Code2,
   ChevronLeft,
   PlayCircle,
   AlertCircle,
   Lightbulb,
   CheckCircle2,
   RefreshCcw,
-  Sparkles
+  Sparkles,
+  Sun,
+  Moon
 } from "lucide-react"
 
 // ── Mock Data ────────────────────────────────────────────────────────
@@ -43,6 +43,9 @@ export default function CodingTestPage() {
   const [hint, setHint] = useState<string | null>(null)
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [showErrorNote, setShowErrorNote] = useState(false)
+  
+  // 테마 (light/dark)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   const handleRunCode = () => {
     if (attempts >= testBase.maxAttempts && result !== 'success') {
@@ -52,22 +55,18 @@ export default function CodingTestPage() {
 
     setIsEvaluating(true)
     
-    // 모의 채점 로직 (시간차)
     setTimeout(() => {
       const newAttempts = attempts + 1
       setAttempts(newAttempts)
 
-      // 아주 간단한 정답 판별 트리거 ('df['age'] >= 30' 이 코드에 있는지 확인)
       if (code.includes("df['age']") && code.includes("30")) {
         setResult('success')
         setHint(null)
       } else {
         setResult('fail')
         if (newAttempts < testBase.maxAttempts) {
-          // AI 소크라테스식 힌트 모의 생성
           setHint("조건문 인덱싱을 활용해본 적이 있나요? `df[조건]` 형태를 어떻게 적용할 수 있을지 생각해보세요.")
         } else {
-          // 3회 포기 -> 오답 노트
           setShowErrorNote(true)
         }
       }
@@ -101,7 +100,7 @@ export default function CodingTestPage() {
             </div>
 
             <Button 
-              className="w-full h-12 rounded-xl font-bold bg-gray-900 text-white"
+              className="w-full h-12 rounded-xl font-bold bg-gray-900 text-white hover:bg-orange-600"
               onClick={() => window.location.href='/dashboard'}
             >
               대시보드로 돌아가기
@@ -112,49 +111,103 @@ export default function CodingTestPage() {
     )
   }
 
-  return (
-    <main className="relative h-screen bg-slate-900 flex flex-col overflow-hidden text-slate-300">
-      <Navbar />
+  const isDark = theme === 'dark'
 
-      <div className="flex-1 flex pt-16 mt-2">
+  return (
+    <main className={cn(
+      "relative h-screen flex flex-col overflow-hidden transition-colors duration-500",
+      isDark ? "bg-slate-900 text-slate-300" : "bg-slate-50 text-slate-900"
+    )}>
+      {/* 슬라이드 다운 네비게이션 : 화면 맨 위에 호버 존을 만들어 접근 시 내려오게 함 */}
+      <div className="absolute top-0 left-0 right-0 h-4 z-50 group">
+        <div className="absolute top-0 inset-x-0 transform -translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out shadow-xl">
+          <Navbar />
+        </div>
+      </div>
+
+      <div className="flex-1 flex h-full"> {/* 상단 Navbar 공간을 띄우지 않고 꽉 채움 */}
+        
         {/* Left: Problem Description */}
-        <div className="w-[400px] bg-slate-800/50 border-r border-slate-700/50 flex flex-col overflow-y-auto no-scrollbar">
-          <div className="p-6">
-            <button
-              onClick={() => window.history.back()}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-medium mb-6 transition-colors"
-            >
-              <ChevronLeft className="h-3 w-3" /> 이전 강의로
-            </button>
+        <div className={cn(
+          "w-[400px] flex flex-col overflow-y-auto no-scrollbar border-r transition-colors duration-500",
+          isDark ? "bg-slate-800/50 border-slate-700/50" : "bg-white border-slate-200 shadow-sm z-10"
+        )}>
+          <div className="p-8"> {/* 약간의 패딩 증가 (상단 여유) */}
+            <div className="flex items-center justify-between mb-8">
+               <button
+                 onClick={() => window.history.back()}
+                 className={cn(
+                   "flex items-center gap-1.5 text-xs font-medium transition-colors",
+                   isDark ? "text-slate-400 hover:text-white" : "text-gray-500 hover:text-orange-600"
+                 )}
+               >
+                 <ChevronLeft className="h-3 w-3" /> 이전으로
+               </button>
+               
+               {/* 테마 스위치 */}
+               <button 
+                 onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                 className={cn(
+                   "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all",
+                   isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                 )}
+               >
+                 {isDark ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+                 {isDark ? '라이트 테마' : '다크 모드'}
+               </button>
+            </div>
 
             <div className="flex items-center gap-2 mb-4">
-              <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-2 py-0.5 rounded-md font-bold text-[10px]">
+              <Badge className={cn(
+                "border-none px-2 py-0.5 rounded-md font-bold text-[10px]",
+                isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+              )}>
                 실전 코딩테스트
               </Badge>
-              <Badge className="bg-slate-700/50 text-slate-300 border-none px-2 py-0.5 rounded-md font-bold text-[10px]">
+              <Badge className={cn(
+                "border-none px-2 py-0.5 rounded-md font-bold text-[10px]",
+                isDark ? "bg-slate-700/50 text-slate-300" : "bg-slate-100 text-slate-600"
+              )}>
                 Pandas
               </Badge>
             </div>
             
-            <h1 className="text-2xl font-black text-white mb-6 leading-tight">
+            <h1 className={cn(
+              "text-2xl font-black leading-tight mb-6",
+              isDark ? "text-white" : "text-gray-900"
+            )}>
               {testBase.title}
             </h1>
 
-            <div className="prose prose-invert prose-sm max-w-none mb-10 text-slate-300">
+            <div className={cn(
+              "prose prose-sm max-w-none mb-10 transition-colors",
+              isDark ? "prose-invert text-slate-300" : "prose-slate text-gray-700"
+            )}>
               <p>{testBase.description}</p>
             </div>
 
             <div className="space-y-4 mb-10">
-              <h3 className="text-sm font-bold text-slate-200">테스트 케이스</h3>
+              <h3 className={cn("text-sm font-bold", isDark ? "text-slate-200" : "text-gray-900")}>
+                테스트 케이스
+              </h3>
               {testBase.testCases.map((tc, idx) => (
-                <div key={idx} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+                <div key={idx} className={cn(
+                  "rounded-xl p-4 border transition-colors",
+                  isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"
+                )}>
                   <div className="mb-3">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Input</span>
-                    <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap">{tc.input}</pre>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Input</span>
+                    <pre className={cn(
+                      "text-xs font-mono whitespace-pre-wrap",
+                      isDark ? "text-slate-300" : "text-slate-800"
+                    )}>{tc.input}</pre>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Expected Output</span>
-                    <pre className="text-xs text-emerald-400 font-mono whitespace-pre-wrap">{tc.expectedOutput}</pre>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Expected Output</span>
+                    <pre className={cn(
+                      "text-xs font-mono whitespace-pre-wrap",
+                      isDark ? "text-emerald-400" : "text-emerald-600 font-bold"
+                    )}>{tc.expectedOutput}</pre>
                   </div>
                 </div>
               ))}
@@ -163,27 +216,38 @@ export default function CodingTestPage() {
         </div>
 
         {/* Right: Code Editor & Runner */}
-        <div className="flex-1 flex flex-col">
-           <div className="h-12 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-4">
+        <div className="flex-1 flex flex-col z-0">
+           <div className={cn(
+             "h-12 border-b flex items-center justify-between px-4 transition-colors duration-500",
+             isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200 shadow-sm z-10"
+           )}>
              <div className="flex items-center gap-3">
                <div className="flex gap-1.5">
-                 <div className="h-3 w-3 rounded-full bg-red-400/20" />
-                 <div className="h-3 w-3 rounded-full bg-amber-400/20" />
-                 <div className="h-3 w-3 rounded-full bg-emerald-400/20" />
+                 <div className="h-3 w-3 rounded-full bg-red-400 opacity-60" />
+                 <div className="h-3 w-3 rounded-full bg-amber-400 opacity-60" />
+                 <div className="h-3 w-3 rounded-full bg-emerald-400 opacity-60" />
                </div>
-               <span className="text-xs font-mono text-slate-500">solution.py</span>
+               <span className={cn(
+                 "text-xs font-mono font-medium",
+                 isDark ? "text-slate-500" : "text-slate-500"
+               )}>solution.py</span>
              </div>
              
              {/* Submission Limit Indicator */}
              <div className="flex items-center gap-4">
                <div className="flex items-center gap-1.5">
-                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">제출 기회</span>
+                 <span className={cn(
+                   "text-xs font-bold uppercase tracking-widest",
+                   isDark ? "text-slate-400" : "text-slate-400"
+                 )}>제출 기회</span>
                  <div className="flex gap-1">
                    {[...Array(testBase.maxAttempts)].map((_, i) => (
                      <div 
                        key={i} 
                        className={cn("h-1.5 w-6 rounded-full transition-all", 
-                         i < attempts ? "bg-red-500/50" : "bg-emerald-500"
+                         i < attempts 
+                           ? (isDark ? "bg-red-500/50" : "bg-red-200")
+                           : (isDark ? "bg-emerald-500" : "bg-emerald-500")
                        )} 
                      />
                    ))}
@@ -193,10 +257,10 @@ export default function CodingTestPage() {
                   onClick={handleRunCode}
                   disabled={isEvaluating || result === 'success' || attempts >= testBase.maxAttempts}
                   className={cn(
-                    "h-8 rounded-lg text-xs font-bold transition-all px-4",
-                    isEvaluating ? "bg-slate-700 text-slate-400" :
+                    "h-8 rounded-lg text-xs font-bold transition-all px-4 shadow-sm",
+                    isEvaluating ? "bg-slate-400 text-white" :
                     result === 'success' ? "bg-emerald-600 text-white" :
-                    "bg-orange-500 hover:bg-orange-600 text-white"
+                    "bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20"
                   )}
                >
                  {isEvaluating ? (
@@ -211,24 +275,35 @@ export default function CodingTestPage() {
            </div>
 
            {/* Editor Mock */}
-           <div className="flex-1 bg-slate-900 relative">
+           <div className={cn(
+             "flex-1 relative transition-colors duration-500",
+             isDark ? "bg-slate-900" : "bg-slate-50/50"
+           )}>
              <textarea
                value={code}
                onChange={(e) => setCode(e.target.value)}
                disabled={result === 'success' || attempts >= testBase.maxAttempts}
                spellCheck="false"
-               className="absolute inset-0 w-full h-full p-6 bg-transparent text-slate-300 font-mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-0 disabled:opacity-50"
+               className={cn(
+                 "absolute inset-0 w-full h-full p-6 bg-transparent font-mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-0 disabled:opacity-50 transition-colors",
+                 isDark ? "text-slate-300" : "text-slate-800 font-medium"
+               )}
              />
            </div>
 
            {/* Feedback/Hint Bar */}
            {hint && result !== 'success' && (
-             <div className="border-t border-amber-500/30 bg-amber-500/10 p-4 animate-in slide-in-from-bottom-2 duration-300">
+             <div className={cn(
+               "border-t p-4 animate-in slide-in-from-bottom-2 duration-300",
+               isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-800"
+             )}>
                <div className="max-w-4xl mx-auto flex items-start gap-3">
-                 <Lightbulb className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                 <Lightbulb className={cn("h-5 w-5 shrink-0 mt-0.5", isDark ? "text-amber-400" : "text-amber-600")} />
                  <div>
-                   <h4 className="text-sm font-bold text-amber-500 mb-1">소크라테스 힌트 도착!</h4>
-                   <p className="text-sm text-amber-200/80 leading-relaxed">{hint}</p>
+                   <h4 className={cn("text-sm font-bold mb-1", isDark ? "text-amber-500" : "text-amber-700")}>
+                     소크라테스 힌트 도착!
+                   </h4>
+                   <p className="text-sm font-medium leading-relaxed opacity-90">{hint}</p>
                  </div>
                </div>
              </div>
@@ -236,16 +311,29 @@ export default function CodingTestPage() {
 
            {/* Success Bar */}
            {result === 'success' && (
-             <div className="border-t border-emerald-500/30 bg-emerald-500/10 p-4 animate-in slide-in-from-bottom-2 duration-300">
+             <div className={cn(
+               "border-t p-4 animate-in slide-in-from-bottom-2 duration-300",
+               isDark ? "border-emerald-500/30 bg-emerald-500/10" : "border-emerald-200 bg-emerald-50"
+             )}>
                <div className="max-w-4xl mx-auto flex items-center justify-between">
                  <div className="flex items-center gap-3">
-                   <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+                   <CheckCircle2 className={cn("h-6 w-6", isDark ? "text-emerald-400" : "text-emerald-600")} />
                    <div>
-                     <h4 className="text-sm font-bold text-emerald-400">모든 테스트 케이스를 통과했습니다!</h4>
-                     <p className="text-xs text-emerald-200/70">훌륭합니다. 다음 단계로 학습을 이어가세요.</p>
+                     <h4 className={cn("text-sm font-bold", isDark ? "text-emerald-400" : "text-emerald-800")}>
+                       모든 테스트 케이스를 통과했습니다!
+                     </h4>
+                     <p className={cn("text-xs font-medium", isDark ? "text-emerald-200/70" : "text-emerald-600/80")}>
+                       훌륭합니다. 다음 단계로 학습을 이어가세요.
+                     </p>
                    </div>
                  </div>
-                 <Button className="font-bold bg-white text-emerald-900 hover:bg-slate-100" onClick={() => window.location.href='/dashboard'}>
+                 <Button 
+                   className={cn(
+                     "font-bold shadow-sm", 
+                     isDark ? "bg-white text-emerald-900 hover:bg-slate-100" : "bg-emerald-600 text-white hover:bg-emerald-700"
+                   )} 
+                   onClick={() => window.location.href='/dashboard'}
+                 >
                    다음 레슨으로
                  </Button>
                </div>
