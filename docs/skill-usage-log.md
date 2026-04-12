@@ -773,3 +773,26 @@ v3의 가장 큰 특징인 '오답에 대한 Socratic Hint 도출 및 Error Note
 
 - User Intervention:
 No.
+
+#### Skill: Phase 3-D — 오답노트(약점 분석) UI 개선 및 토글 기능 구현
+- Timestamp: 2026-04-12T17:28:00+09:00
+- Task Description:
+학생 측의 오답노트(분석 보고서)를 더 효율적으로 조회할 수 있도록 아코디언 토글 적용 및 학습 맥락(어떤 강의인지) 강화.
+
+- Reason for Using This Skill:
+오답노트가 단순 리스트가 아니라 '분석' 도구로서 가동하기 위해 정보의 시각적 위계와 사용자 인터랙션(Toggle)이 필요함.
+
+- Execution Summary:
+1. `app/student/error-notes/page.tsx`에 `expandedIds` 상태를 도입하여 가변적 UI 렌더링.
+2. 각 오답 카드의 헤더에 `seriesTitle`, `lectureTitle`을 명시하여 맥락 제공.
+3. AI 분석 섹션을 클릭 시에만 노출되게 하여 정보 과부하 방지.
+
+- Skills Applied:
+  - `ui-builder`: Accordion UI 패턴 및 Tailwind 동적 높이 제어.
+  - `compositional-design`: 복잡한 메타데이터(강의, 단계, 상태)를 카드 헤더에 응축.
+
+- Result:
+오답노트가 '분석 리포트'로서 기능을 하며, 학생이 보고 싶은 분석만 선택해서 볼 수 있는 깔끔한 UI 확보.
+
+- User Intervention:
+No.
