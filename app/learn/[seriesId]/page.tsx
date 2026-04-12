@@ -27,6 +27,7 @@ const MOCK_ENROLLMENT_DETAIL = {
     { id: "l1", title: "파이썬 환경 설정", isCompleted: true, type: "video" },
     { id: "l2", title: "자료형과 변수", isCompleted: true, type: "quiz" },
     { id: "l3", title: "Pandas 기초 다지기", isCompleted: false, type: "code", isCurrent: true },
+    { id: "s1", title: "[보충] 데이터 프레임 합치기", isCompleted: false, type: "video", isSupplemental: true },
     { id: "l4", title: "데이터 시각화", isCompleted: false, type: "video" },
   ]
 }
@@ -118,7 +119,13 @@ export default function SeriesLearnPage() {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-gray-400 mb-0.5">강좌 {idx + 1}</p>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-xs font-bold text-gray-400">강좌 {idx + 1}</p>
+                      {/* @ts-ignore */}
+                      {lecture.isSupplemental && (
+                        <Badge className="bg-orange-500 text-white border-none text-[8px] h-4 px-1.5 font-black uppercase">보충 학습</Badge>
+                      )}
+                    </div>
                     <h4 className={cn("text-base font-bold", lecture.isCurrent ? "text-orange-900" : "text-gray-900")}>
                       {lecture.title}
                     </h4>

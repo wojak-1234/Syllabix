@@ -141,6 +141,42 @@ ${COMMON_RULES.LANGUAGE}`
 
 // ── Teacher 출제용 프롬프트 빌더 (v3) ─────────────────────────────
 
+export function buildGenerateSeriesPrompt(params: {
+  title: string
+  description: string
+  targetLevel: string
+}): string {
+  return `${SYSTEM_ROLES.CURRICULUM_EXPERT}
+
+초기 정보(제목, 설명, 대상 수준)를 바탕으로, 강사가 될 사용자를 위해 시리즈(커리큘럼) 전체 구조와 소속 강좌(Lecture) 목록을 매우 세밀하게 설계하세요.
+
+[요청 정보]
+- 과목 제목: ${params.title}
+- 추가 설명: ${params.description}
+- 대상 수준: ${params.targetLevel}
+
+[응답 지침 및 산출물 형태]
+1. 주제에 맞는 핵심 강좌(Lecture)들을 순서대로 설계하세요 (3~6개 권장).
+2. 각 강좌마다 명확한 'title', 'learningObjective', 'conceptTags'를 포함하세요.
+3. 각 강좌에는 **반드시 유튜브나 공식 보충영상 등 유용한 보충영상 링크**를 찾아 'attachmentUrl'에 유튜브 실제 링크(또는 "https://www.youtube.com/results?search_query=키워드" 형식의 검색 링크)로 기재해주세요.
+4. 모든 코멘트와 설명은 강사에게 조언하는 형태의 전문적인 어조를 유지하세요.
+5. ${COMMON_RULES.NO_LABEL_ABCD}
+
+${COMMON_RULES.LANGUAGE} ${COMMON_RULES.JSON_ONLY}
+응답 형식: {
+  "title": "${params.title}",
+  "description": "AI가 보강한 상세 커리큘럼 소개...",
+  "lectures": [
+    {
+      "title": "강좌 제목...",
+      "learningObjective": "학습 목표...",
+      "conceptTags": ["개념1", "개념2"],
+      "attachmentUrl": "https://www.youtube.com/results?search_query=보충영상키워드"
+    }
+  ]
+}`
+}
+
 export function buildGenerateQuizPrompt(params: {
   lectureTitle: string
   learningObjective: string

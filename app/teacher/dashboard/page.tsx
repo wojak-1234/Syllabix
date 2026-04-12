@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -149,7 +149,7 @@ function SeriesCard({ series, onClick }: { series: SeriesSummary; onClick: () =>
              className="h-8 rounded-lg text-xs font-bold border-emerald-100 text-emerald-600 hover:bg-emerald-50"
              onClick={(e) => {
                e.stopPropagation();
-               window.location.href=`/teacher/series/${series.id}/analytics`;
+               window.location.href=`/teacher/analytics?seriesId=${series.id}`;
              }}
           >
             <BarChart3 className="h-3 w-3 mr-1.5" /> 분석 리포트
@@ -200,22 +200,36 @@ function CreateSeriesModal({
     if (!title.trim()) return
     setCreating(true)
 
-    // TODO: DB 연결 후 실제 API 호출로 교체
-    // const res = await fetch('/api/teacher/series', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ teacherId: 'mock-teacher-id', title, description, targetLevel }),
-    // })
+    try {
+      const res = await fetch('/api/teacher/series/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherId: 'mock-teacher-id', title, description, targetLevel }),
+      })
 
-    // 임시: sessionStorage에 저장 후 강좌 편집 페이지로 이동
-    const newSeriesId = 'new-' + Date.now()
-    sessionStorage.setItem('newSeries', JSON.stringify({
-      id: newSeriesId,
-      title,
-      description,
-      targetLevel,
-    }))
-    window.location.href = `/teacher/series/${newSeriesId}/edit`
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate series');
+      }
+
+      const { data } = await res.json()
+
+      // 임시: sessionStorage에 저장 후 강좌 편집 페이지로 이동 (진행 중인 로직 호환성 대비)
+      sessionStorage.setItem('newSeries', JSON.stringify({
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        targetLevel: data.targetLevel,
+        lectures: data.lectures || [],
+      }))
+      
+      window.location.href = `/teacher/series/${data.id}/edit`
+    } catch (error: any) {
+      console.error(error)
+      alert(`생성에 실패했습니다: ${error.message}`)
+    } finally {
+      setCreating(false)
+    }
   }
 
   return (
@@ -312,12 +326,33 @@ function CreateSeriesModal({
 // ── 메인 페이지 ──────────────────────────────────────────────────────
 
 export default function TeacherDashboardPage() {
-  const [seriesList] = useState<SeriesSummary[]>(MOCK_SERIES)
+  const [seriesList, setSeriesList] = useState<SeriesSummary[]>([])
+  const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
+  const teacherId = 'mock-teacher-id'
   const teacherName = "홍길동"
+
+  const fetchSeries = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/teacher/series?teacherId=${teacherId}`)
+      if (!res.ok) throw new Error("Failed to fetch series")
+      const { data } = await res.json()
+      setSeriesList(data)
+    } catch (error) {
+      console.error("Error fetching series:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchSeries()
+  }, [])
+
   const publishedCount = seriesList.filter(s => s.status === 'PUBLISHED').length
-  const totalEnrollments = seriesList.reduce((sum, s) => sum + s._count.enrollments, 0)
+  const totalEnrollments = seriesList.reduce((sum, s) => sum + (s._count?.enrollments || 0), 0)
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50/50 pb-20">
@@ -341,7 +376,7 @@ export default function TeacherDashboardPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
             <div className="flex items-center gap-3 mb-3">
               <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -350,7 +385,7 @@ export default function TeacherDashboardPage() {
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">전체 커리큘럼</p>
             </div>
             <p className="text-3xl font-black text-gray-900">
-              {seriesList.length}<span className="text-base text-gray-400 ml-1">개</span>
+              {loading ? '-' : seriesList.length}<span className="text-base text-gray-400 ml-1">개</span>
             </p>
           </div>
           <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
@@ -361,7 +396,7 @@ export default function TeacherDashboardPage() {
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">공개 중</p>
             </div>
             <p className="text-3xl font-black text-gray-900">
-              {publishedCount}<span className="text-base text-gray-400 ml-1">개</span>
+              {loading ? '-' : publishedCount}<span className="text-base text-gray-400 ml-1">개</span>
             </p>
           </div>
           <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
@@ -372,7 +407,7 @@ export default function TeacherDashboardPage() {
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">총 수강생</p>
             </div>
             <p className="text-3xl font-black text-gray-900">
-              {totalEnrollments}<span className="text-base text-gray-400 ml-1">명</span>
+              {loading ? '-' : totalEnrollments}<span className="text-base text-gray-400 ml-1">명</span>
             </p>
           </div>
         </div>
@@ -388,7 +423,13 @@ export default function TeacherDashboardPage() {
               }}
             />
           ))}
-          <CreateSeriesCard onClick={() => setShowCreateModal(true)} />
+          {!loading && <CreateSeriesCard onClick={() => setShowCreateModal(true)} />}
+          {loading && (
+             <div className="col-span-full py-20 flex flex-col items-center justify-center">
+                <div className="h-8 w-8 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
+                <p className="text-gray-400 font-bold">커리큘럼 목록을 불러오고 있습니다...</p>
+             </div>
+          )}
         </div>
       </div>
 

@@ -16,8 +16,8 @@ export const genAI = new GoogleGenerativeAI(apiKey)
  */
 export const MODELS = {
   LITE:     "gemini-3.1-flash-lite-preview",
-  STANDARD: "gemini-1.5-flash",
-  PRO:      "gemini-3-flash-preview",
+  STANDARD: "gemini-3.1-flash-lite-preview",
+  PRO:      "gemini-3.1-flash-lite-preview",
 } as const
 
 /** @deprecated DEFAULT_MODEL 대신 MODELS.LITE / MODELS.STANDARD / MODELS.PRO 를 명시적으로 사용하세요. */

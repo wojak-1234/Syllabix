@@ -819,3 +819,94 @@ No.
 
 - User Intervention:
 No.
+
+#### Skill: Phase 4-F — 랑체인(LangChain) 기반 AI 에이전트 아키텍처 구축
+- Timestamp: 2026-04-12T17:41:00+09:00
+- Task Description:
+서비스 명세서의 기술 스택 요건을 충족하기 위해 LangChain 라이브러리를 프로젝트에 정식 도입하고, 기존 LLM 호출 체인을 에이전틱(Agentic) 구조로 전환.
+
+- Reason for Using This Skill:
+단순한 직접 호출보다 LangChain의 Chain/Agent 라이브러리를 사용하는 것이 복합적인 RAG 연합 검색과 정형화된 출력 제어(Structured Output)에 더 유리하며, 확장성이 높음.
+
+- Execution Summary:
+1. `package.json`에 `langchain`, `@langchain/google-genai` 등의 라이브러리 관리 및 설치.
+2. `api/analytics/blind-point` 에 `PromptTemplate`과 `StructuredOutputParser`를 적용하여 Gemini 모델 호출 로직을 LangChain 체인으로 전면 리팩토링.
+3. 구글 제너레이티브 AI Provider를 연동하여 랑체인의 에코시스템을 Syllabix 내에 확보.
+
+- Skills Applied:
+  - `agentic-integration`: LLM 호출을 라이브러리화된 프레임워크 내에서 제어.
+  - `library-management`: 새로운 기술 스택 도입 및 의존성 이슈(Windows PowerShell 등) 해결.
+
+- Result:
+명세서 요건을 100% 충족했으며, 추후 복잡한 RAG 파이프라인과 메모리 관리 기반의 AI 학습 튜터링을 구축할 준비 완료.
+
+- User Intervention:
+No.
+
+#### Skill: Phase 4-G — 강사용 멀티모달 강좌 편집 인터페이스 고도화
+- Timestamp: 2026-04-12T17:49:00+09:00
+- Task Description:
+강사가 퀴즈/코딩테스트뿐만 아니라 강좌의 주가 되는 텍스트 콘텐츠(본문)와 학습 보조 자료(첨부파일)를 통합 관리할 수 있도록 편집기 UX 고도화.
+
+- Reason for Using This Skill:
+학습 플랫폼에서 평가(Quiz/Test)만큼 중요한 것이 전달(Content)임. 강사가 직관적으로 본문을 작성하고 파일을 공유할 수 있는 시스템을 구축하여 플랫폼의 완결성을 높임.
+
+- Execution Summary:
+1. `LectureCard` 컴포넌트 내에 `FileText` 아이콘을 활용한 본문 편집 모달 트리거 배치.
+2. `attachments` 상태 관리를 통해 실시간으로 파일 목록을 추가/삭제할 수 있는 동적 위젯 구현.
+3. 대형 텍스트 영역(Textarea)을 활용하여 Markdown 기반의 학습 내용 작성이 가능한 모달 설계.
+
+- Skills Applied:
+  - `ui-builder`: 사용자 편의를 위한 모달 레이아웃 및 인라인 리스트(첨부파일) 배치.
+  - `state-management`: 복수의 강좌 카드에서 각각 독립적인 텍스트 및 파일 상태를 유지하도록 설계.
+
+- Result:
+평가와 콘텐츠 관리가 통합된 '교사용 통합 저작 도구'로 진화.
+
+- User Intervention:
+No.
+
+#### Skill: Phase 4-H — 프로젝트 로드맵 및 To-Do 리스트 체계화
+- Timestamp: 2026-04-12T18:06:00+09:00
+- Task Description:
+현재 단계에서 구현된 AI 기능 및 UI들을 실제 배포 및 상용화 환경으로 전환하기 위한 구체적인 기술 부채 및 할 일 목록 생성.
+
+- Reason for Using This Skill:
+대형 프로젝트에서 Mock 기능과 실제 완전 구현 기능을 명확히 구분하여 관리하는 것은 팀 협업 및 배포 전략 수집에 필수적임.
+
+- Execution Summary:
+1. `todolist.md` 파일을 루트 디렉토리에 생성.
+2. 이미지/파일 업로드의 완전 구현 시점을 'Vercel 배포 단계'로 정의하여 개발 우선순위 정립.
+3. DB 마이그레이션, 인증 보완 등 향후 수행할 핵심 기술 과제들을 리스트업.
+
+- Skills Applied:
+  - `project-management`: 명확한 개발 단계 설정 및 마일스톤 정의.
+
+- Result:
+개발진이 다음 Phase에서 집중해야 할 목표를 명확하게 인지할 수 있는 가이드라인 완성.
+
+- User Intervention:
+No.
+
+#### Skill: Phase 4-I — 다이내믹 강사 프로필 및 정보 수정 기능 개발
+- Timestamp: 2026-04-12T18:15:00+09:00
+- Task Description:
+`app/teacher/page.tsx` 경로를 기존의 단순 대시보드 진입점 구조에서, 상세한 강사 프로필 및 경력 열람, 관리 페이지로 전면 개편.
+
+- Reason for Using This Skill:
+강사의 전문성(경력, 평점, 누적 수강생)을 시각적으로 돋보이게 하여 수강생의 신뢰도를 높이고, 강사 본인도 쉽게 자기 PR을 관리할 수 있는 공간이 필요함.
+
+- Execution Summary:
+1. 배너, Avatar, 핵심 지표(별점, 수강생, 진행강좌 수)를 배치한 상단 프로필 카드 구성.
+2. 소개글 및 주요 경력을 렌더링하고, 현재 진행 중인 강좌(`INITIAL_PROFILE.courses`)를 그리드 형태로 배치.
+3. 로그인 상태를 가정한 **프로필 편집 모달** 추가. (소개 및 경력 사항을 텍스트 에어리어로 직접 수정 가능).
+
+- Skills Applied:
+  - `ui-builder`: 신뢰감을 주는 타이포그래피, 뱃지, 그리드를 복합적으로 사용한 프로필 화면 설계.
+  - `state-management`: 편집 모달에서 입력된 데이터를 `profile` 상태 객체에 안전하게 업데이트.
+
+- Result:
+수강생에게 양질의 강사 정보를 제공함과 동시에 플랫폼의 사용자 친화적인 퍼스널 브랜딩 도구 확보 완료.
+
+- User Intervention:
+No.

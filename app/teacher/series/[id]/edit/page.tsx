@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useParams } from "next/navigation"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -25,6 +26,8 @@ import {
   Globe,
   Lock,
   Link2,
+  ImagePlus,
+  Loader2,
 } from "lucide-react"
 
 // ── 타입 정의 ────────────────────────────────────────────────────────
@@ -37,6 +40,7 @@ interface LectureItem {
   conceptTags: string[]
   quizCount: number
   codingTestCount: number
+  content?: string
 }
 
 interface SeriesData {
@@ -47,22 +51,6 @@ interface SeriesData {
   status: 'DRAFT' | 'PUBLISHED'
   visibility: 'PUBLIC' | 'LINK_ONLY' | 'PRIVATE'
   lectures: LectureItem[]
-}
-
-// ── Mock 초기 데이터 ────────────────────────────────────────────────
-
-const MOCK_SERIES_DETAIL: SeriesData = {
-  id: '1',
-  title: 'Python 기초부터 실전까지',
-  description: '프로그래밍 입문자를 위한 파이썬 완벽 가이드',
-  targetLevel: 'beginner',
-  status: 'DRAFT',
-  visibility: 'PRIVATE',
-  lectures: [
-    { id: 'l1', order: 1, title: '변수와 자료형', learningObjective: '파이썬의 기본 자료형을 이해하고 변수를 선언할 수 있다', conceptTags: ['변수', '자료형', 'int', 'str'], quizCount: 3, codingTestCount: 1 },
-    { id: 'l2', order: 2, title: '조건문과 반복문', learningObjective: 'if/elif/else와 for/while 반복문을 사용할 수 있다', conceptTags: ['if', 'for', 'while'], quizCount: 2, codingTestCount: 2 },
-    { id: 'l3', order: 3, title: '함수와 모듈', learningObjective: '사용자 정의 함수를 작성하고 모듈로 분리할 수 있다', conceptTags: ['함수', 'def', 'import'], quizCount: 0, codingTestCount: 0 },
-  ],
 }
 
 // ── 강좌 추가 모달 ──────────────────────────────────────────────────
@@ -175,14 +163,28 @@ function AddLectureModal({
 function LectureCard({
   lecture,
   onDelete,
+  onEditContent
 }: {
   lecture: LectureItem
   onDelete: () => void
+  onEditContent: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [attachments, setAttachments] = useState<{name: string, type: string}[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAddFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0]
+      setAttachments([...attachments, { name: file.name, type: 'file' }])
+      // 동일한 파일을 다시 선택할 수 있도록 value 초기화
+      e.target.value = ''
+    }
+  }
 
   return (
-    <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+    <>
+      <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
       <div className="flex items-center gap-3 p-4">
         <div className="cursor-grab text-gray-300 hover:text-gray-500 transition-colors">
           <GripVertical className="h-5 w-5" />
@@ -199,10 +201,10 @@ function LectureCard({
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-            <span className="flex items-center gap-0.5">
+            <span className="flex items-center gap-0.5" title="퀴즈">
               <HelpCircle className="h-3 w-3" /> {lecture.quizCount}
             </span>
-            <span className="flex items-center gap-0.5">
+            <span className="flex items-center gap-0.5" title="코딩테스트">
               <Code2 className="h-3 w-3" /> {lecture.codingTestCount}
             </span>
           </div>
@@ -236,29 +238,105 @@ function LectureCard({
                 ))}
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="rounded-xl text-xs h-8 flex items-center gap-1.5">
-                <HelpCircle className="h-3 w-3" /> 퀴즈 관리
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                onClick={onEditContent}
+                size="sm" variant="outline" className="rounded-xl text-xs h-8 flex items-center gap-1.5 border-emerald-100 text-emerald-700 bg-emerald-50/30"
+              >
+                <FileText className="h-3 w-3" /> 강좌 본문 편집
               </Button>
-              <Button size="sm" variant="outline" className="rounded-xl text-xs h-8 flex items-center gap-1.5">
-                <Code2 className="h-3 w-3" /> 코딩테스트 관리
+              <input 
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAddFile}
+                className="hidden"
+              />
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                size="sm" variant="outline" className="rounded-xl text-xs h-8 flex items-center gap-1.5 border-blue-100 text-blue-700 bg-blue-50/30"
+              >
+                <Plus className="h-3 w-3" /> 첨부파일 추가
               </Button>
+              
+              {attachments.length > 0 && (
+                <div className="w-full mt-2 bg-slate-50/50 rounded-xl p-3 border border-slate-100 space-y-1">
+                   <p className="text-[9px] font-bold text-gray-400 uppercase mb-1">첨부파일 ({attachments.length})</p>
+                   {attachments.map((at, i) => (
+                     <div key={i} className="flex items-center justify-between text-[11px] text-gray-600 font-medium">
+                        <span className="flex items-center gap-1.5"><FileText className="h-3 w-3 text-blue-500" /> {at.name}</span>
+                        <button onClick={() => setAttachments(attachments.filter((_, idx)=>idx!==i))} className="text-gray-300 hover:text-red-500 transition-colors">✕</button>
+                     </div>
+                   ))}
+                </div>
+              )}
+
+              <div className="w-full flex gap-2">
+                <Button size="sm" variant="outline" className="rounded-xl text-xs h-8 flex items-center gap-1.5 flex-1">
+                  <HelpCircle className="h-3 w-3" /> 퀴즈 관리
+                </Button>
+                <Button size="sm" variant="outline" className="rounded-xl text-xs h-8 flex items-center gap-1.5 flex-1">
+                  <Code2 className="h-3 w-3" /> 코딩테스트 관리
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       )}
-    </div>
+
+      </div>
+    </>
   )
 }
 
 // ── 메인 페이지 ──────────────────────────────────────────────────────
 
 export default function SeriesEditPage() {
-  const [series, setSeries] = useState<SeriesData>(MOCK_SERIES_DETAIL)
+  const params = useParams()
+  const id = params.id as string
+
+  const [series, setSeries] = useState<SeriesData | null>(null)
+  const [loading, setLoading] = useState(true)
   const [showAddLecture, setShowAddLecture] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [editingLecture, setEditingLecture] = useState<LectureItem | null>(null)
+  const [editorContent, setEditorContent] = useState('')
+  const imageInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const fetchSeries = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch(`/api/teacher/series/${id}`)
+        if (!res.ok) throw new Error("Failed to fetch series")
+        const { data } = await res.json()
+        
+        // 데이터 매핑 (API 응답 구조에 맞춤)
+        const mappedLectures = (data.lectures || []).map((l: any) => ({
+          ...l,
+          conceptTags: typeof l.conceptTags === 'string' ? JSON.parse(l.conceptTags) : (l.conceptTags || []),
+          quizCount: l.quizzes?.length || 0,
+          codingTestCount: l.codingTests?.length || 0
+        }))
+
+        setSeries({
+          ...data,
+          lectures: mappedLectures
+        })
+      } catch (error) {
+        console.error("Error fetching series:", error)
+        alert("데이터를 가져오는 중 오류가 발생했습니다.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (id) {
+      fetchSeries()
+    }
+  }, [id])
 
   const handleAddLecture = (data: { title: string; learningObjective: string; conceptTags: string[] }) => {
+    if (!series) return
     const newLecture: LectureItem = {
       id: 'new-' + Date.now(),
       order: series.lectures.length + 1,
@@ -272,12 +350,14 @@ export default function SeriesEditPage() {
   }
 
   const handleDeleteLecture = (lectureId: string) => {
+    if (!series) return
     const filtered = series.lectures.filter(l => l.id !== lectureId)
     const reordered = filtered.map((l, idx) => ({ ...l, order: idx + 1 }))
     setSeries({ ...series, lectures: reordered })
   }
 
   const handlePublish = () => {
+    if (!series) return
     setSeries({ ...series, status: 'PUBLISHED', visibility: 'PUBLIC' })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -286,6 +366,26 @@ export default function SeriesEditPage() {
   const handleSaveDraft = () => {
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <Loader2 className="h-10 w-10 text-emerald-500 animate-spin mb-4" />
+        <p className="text-gray-500 font-bold">커리큘럼을 불러오는 중...</p>
+      </div>
+    )
+  }
+
+  if (!series) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <p className="text-gray-500 font-bold">커리큘럼을 찾을 수 없습니다.</p>
+        <Button onClick={() => window.location.href = '/teacher/dashboard'} className="mt-4">
+          대시보드로 돌아가기
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -379,6 +479,10 @@ export default function SeriesEditPage() {
                 key={lecture.id}
                 lecture={lecture}
                 onDelete={() => handleDeleteLecture(lecture.id)}
+                onEditContent={() => {
+                  setEditingLecture(lecture)
+                  setEditorContent(lecture.content || '')
+                }}
               />
             ))}
           </div>
@@ -403,6 +507,58 @@ export default function SeriesEditPage() {
         onClose={() => setShowAddLecture(false)}
         onAdd={handleAddLecture}
       />
+
+      {/* Notion Style Fullscreen Editor */}
+      {editingLecture && (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-slate-50 animate-in slide-in-from-bottom-5 duration-300">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+             <button onClick={() => setEditingLecture(null)} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold transition-colors">
+               <ChevronLeft className="h-5 w-5" /> 돌아가기
+             </button>
+             <div className="flex items-center gap-3">
+               <input 
+                 type="file" 
+                 ref={imageInputRef} 
+                 accept="image/*" 
+                 className="hidden" 
+                 onChange={(e) => {
+                   if (e.target.files && e.target.files.length > 0) {
+                     const file = e.target.files[0];
+                     setEditorContent(prev => prev + `\n![${file.name}](image_url_placeholder)\n`);
+                     e.target.value = '';
+                   }
+                 }}
+               />
+               <Button 
+                 variant="outline" 
+                 onClick={() => imageInputRef.current?.click()}
+                 className="h-10 rounded-xl font-bold flex items-center gap-2 text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
+               >
+                 <ImagePlus className="h-4 w-4" /> 이미지 첨부
+               </Button>
+               <Button 
+                 onClick={() => {
+                   setEditingLecture(null);
+                   setSaved(true);
+                   setTimeout(() => setSaved(false), 2000);
+                 }}
+                 className="h-10 rounded-xl font-bold bg-gray-900 text-white hover:bg-black px-6"
+               >
+                 저장하기
+               </Button>
+             </div>
+          </div>
+          <div className="flex-1 overflow-auto p-12 w-full max-w-4xl mx-auto custom-scrollbar">
+            <h1 className="text-4xl font-black mb-8 text-gray-900">{editingLecture.title}</h1>
+            <textarea 
+              className="w-full h-full min-h-[500px] border-none outline-none focus:ring-0 bg-transparent resize-none text-lg text-gray-700 placeholder:text-gray-400 font-medium whitespace-pre-wrap leading-relaxed"
+              placeholder="이곳에 마크다운과 텍스트를 입력하세요. '/'를 입력하여 명령어(제목, 강조, 코드블록 등)를 사용할 수 있습니다. (Notion 스타일 지원)"
+              value={editorContent}
+              onChange={(e) => setEditorContent(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
 
       <Footer />
     </main>

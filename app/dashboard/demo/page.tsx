@@ -15,7 +15,8 @@ import {
   Zap,
   Clock,
   PlayCircle,
-  ExternalLink
+  ExternalLink,
+  Star
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -197,8 +198,8 @@ export default function DemoDashboardPage() {
                             const course = MOCK_KNOWLEDGE_BASE.find(c => c.id === courseId);
                             if (!course) return null;
                             return (
-                              <div key={courseId} className="group/course relative flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-100 hover:border-orange-200 hover:shadow-md transition-all duration-300">
-                                <div className="flex items-center gap-4">
+                              <div key={courseId} className="group/course relative flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl bg-white border border-slate-100 hover:border-orange-200 hover:shadow-md transition-all duration-300 gap-4">
+                                <div className="flex items-center gap-4 flex-1">
                                   <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover/course:bg-orange-500 group-hover/course:text-white transition-colors">
                                     <PlayCircle className="h-5 w-5" />
                                   </div>
@@ -212,9 +213,30 @@ export default function DemoDashboardPage() {
                                     <p className="text-[11px] text-gray-400 line-clamp-1">{course.description}</p>
                                   </div>
                                 </div>
-                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full hover:bg-orange-100 hover:text-orange-600 transition-colors shrink-0">
-                                  <ExternalLink className="h-4 w-4" />
-                                </Button>
+                                
+                                <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-3 md:pt-0 border-slate-50">
+                                   <div className="flex items-center gap-2">
+                                      {course.instructorImage && (
+                                        <img src={course.instructorImage} alt={course.instructor} className="h-7 w-7 rounded-lg border border-slate-100 object-cover" />
+                                      )}
+                                      <div>
+                                         <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-0.5">Teacher</p>
+                                         <p className="text-[10px] font-bold text-gray-700">{course.instructor || '익명 강사'}</p>
+                                      </div>
+                                   </div>
+                                   <div className="flex items-center gap-3">
+                                      <div className="text-right">
+                                         <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-0.5">Rating</p>
+                                         <div className="flex items-center gap-0.5 text-amber-500">
+                                            <Star className="h-3 w-3 fill-amber-500" />
+                                            <span className="text-[10px] font-black">{course.rating || '0.0'}</span>
+                                         </div>
+                                      </div>
+                                      <Button size="sm" variant="ghost" className="h-9 w-9 p-0 rounded-full hover:bg-orange-100 hover:text-orange-600 transition-colors shrink-0">
+                                        <ExternalLink className="h-4 w-4" />
+                                      </Button>
+                                   </div>
+                                </div>
                               </div>
                             );
                           })}

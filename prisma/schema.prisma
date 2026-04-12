@@ -6,27 +6,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-// ── Enums ────────────────────────────────────────────────────────────
+// SQLite는 Enum을 지원하지 않으므로 String으로 대체합니다.
+// (관리 필요: STUDENT, TEACHER)
+// enum UserRole { ... }
+// enum SeriesVisibility { ... }
+// enum SeriesStatus { ... }
 
-enum UserRole {
-  STUDENT
-  TEACHER
-}
-
-enum SeriesVisibility {
-  PUBLIC // 전체 공개
-  LINK_ONLY // 링크 공개
-  PRIVATE // 비공개
-}
-
-enum SeriesStatus {
-  DRAFT // 작성 중
-  PUBLISHED // 공개됨
-}
 
 // ── User ─────────────────────────────────────────────────────────────
 
@@ -34,7 +23,8 @@ model User {
   id    String   @id @default(cuid())
   email String   @unique
   name  String?
-  role  UserRole @default(STUDENT)
+  role  String   @default("STUDENT") // STUDENT, TEACHER
+
 
   // Teacher relations
   series      Series[] // 강사가 만든 커리큘럼
@@ -61,8 +51,9 @@ model Series {
   targetLevel String // 대상 수준 (beginner / intermediate / advanced)
   goal        String? // 목표 수강자 설정
 
-  status     SeriesStatus     @default(DRAFT)
-  visibility SeriesVisibility @default(PRIVATE)
+  status     String @default("DRAFT") // DRAFT, PUBLISHED
+  visibility String @default("PRIVATE") // PUBLIC, LINK_ONLY, PRIVATE
+
 
   lectures    Lecture[] // 소속 강좌 목록
   enrollments Enrollment[] // 수강 등록
@@ -81,8 +72,9 @@ model Lecture {
   order             Int // 강좌 순서 (드래그로 조정)
   title             String
   learningObjective String // 학습 목표 (필수 — RAG 앵커)
-  conceptTags       String[] // 핵심 개념 태그 (필수 — Blind Point 매칭 기준)
+  conceptTags       String // 핵심 개념 태그 (JSON 또는 쉼표 분리 문자열)
   content           String? // 강의 본문 / 스크립트 (RAG용)
+
   attachmentUrl     String? // 첨부파일 URL (PDF, 슬라이드)
 
   quizzes     Quiz[]
@@ -104,8 +96,9 @@ model Enrollment {
   series    Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   currentLectureId    String? // 현재 진행 중인 강좌 ID
-  completedLectureIds String[] // 완료한 강좌 ID 목록
-  progress            Float    @default(0) // 진도율 (0.0 ~ 1.0)
+  completedLectureIds String // 완료한 강좌 ID 목록 (JSON stringify)
+  progress            Float   @default(0) // 진도율 (0.0 ~ 1.0)
+
 
   joinedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -122,8 +115,9 @@ model Quiz {
 
   order       Int // 퀴즈 순서
   question    String // 문제
-  choices     Json // 선택지 배열 [{ label: string, isCorrect: boolean }]
+  choices     String // 선택지 배열 [{ label: string, isCorrect: boolean }]
   explanation String? // 정답 해설
+
   conceptTag  String? // 이 문제가 평가하는 개념
 
   createdAt DateTime @default(now())
@@ -140,8 +134,9 @@ model CodingTest {
   title           String // 문제 제목
   description     String // 문제 설명
   starterCode     String? // 초기 코드 (보일러플레이트)
-  testCases       Json // 입출력 예시 [{ input: string, expectedOutput: string }]
+  testCases       String // 입출력 예시 [{ input: string, expectedOutput: string }]
   solutionCode    String? // 정답 코드 (채점 기준)
+
   gradingCriteria String? // 채점 기준 설명
   conceptTag      String? // 평가 대상 개념
 
@@ -185,7 +180,8 @@ model ErrorNote {
   wrongReason    String // 틀린 이유 (AI 분석)
   relatedConcept String // 관련 개념
   attemptCount   Int // 시도 횟수
-  codeSnapshots  Json? // 코드 스냅샷 배열 (코딩테스트인 경우)
+  codeSnapshots  String? // 코드 스냅샷 배열 (JSON stringify)
+
 
   // 보충 학습 연결
   relatedLectureId String? // 관련 강좌 ID (RAG 검색 결과)
@@ -202,8 +198,9 @@ model ActivityLog {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   type      String // QUIZ_ANSWER, CODING_SUBMIT, LECTURE_VIEW
-  content   Json // 상세 데이터
+  content   String // 상세 데이터 (JSON stringify)
   lectureId String?
+
   createdAt DateTime @default(now())
 }
 

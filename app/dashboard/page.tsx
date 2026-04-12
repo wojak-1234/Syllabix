@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Zap,
   Code2,
-  AlertTriangle
+  AlertTriangle,
+  Star
 } from "lucide-react"
 
 // ── Mock Data ────────────────────────────────────────────────────────
@@ -37,6 +38,8 @@ const MOCK_RECOMMENDATIONS = [
     id: "s2",
     title: "React를 활용한 프론트엔드 실전",
     instructor: "김코딩 강사",
+    instructorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+    rating: 4.8,
     targetLevel: "intermediate",
     description: "useState부터 커스텀 훅, 상태 관리까지 실무 기반의 리액트 핵심을 배웁니다.",
     lectureCount: 15
@@ -45,6 +48,8 @@ const MOCK_RECOMMENDATIONS = [
     id: "s3",
     title: "Next.js 14 및 서버 컴포넌트",
     instructor: "이넥스트 강사",
+    instructorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+    rating: 4.9,
     targetLevel: "advanced",
     description: "Next.js의 최신 기능인 App Router와 RSC의 원리를 파악하고 실전 프로젝트를 만듭니다.",
     lectureCount: 8
@@ -166,25 +171,32 @@ export default function StudentDashboardPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {recommendations.map(rec => (
-              <div key={rec.id} className="bg-white/60 backdrop-blur-sm rounded-3xl p-6 border border-white/60 shadow-sm hover:border-orange-200 hover:shadow-md transition-all cursor-pointer" onClick={() => window.location.href = `/series/${rec.id}`}>
-                <div className="flex items-center gap-2 mb-3">
+              <div 
+                key={rec.id} 
+                className="group bg-white/60 backdrop-blur-sm rounded-[2rem] p-7 border border-white/60 shadow-sm hover:border-orange-200 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden" 
+                onClick={() => window.location.href = `/series/${rec.id}`}
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-orange-100/20 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-orange-100/40 transition-all" />
+                
+                <div className="flex items-start justify-between mb-4">
                   <Badge className={cn(
-                    "border-none px-2 py-0.5 rounded-md font-bold text-[10px]",
-                    rec.targetLevel === 'beginner' ? 'bg-emerald-50 text-emerald-600' :
-                    rec.targetLevel === 'intermediate' ? 'bg-amber-50 text-amber-600' :
-                    'bg-red-50 text-red-600'
+                    "border-none px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider",
+                    rec.targetLevel === 'beginner' ? 'bg-emerald-100 text-emerald-600' :
+                    rec.targetLevel === 'intermediate' ? 'bg-amber-100 text-amber-600' :
+                    'bg-rose-100 text-rose-600'
                   )}>
-                    {rec.targetLevel === 'beginner' ? '입문' : rec.targetLevel === 'intermediate' ? '중급' : '고급'}
+                    {rec.targetLevel}
                   </Badge>
-                  <span className="text-xs font-bold text-gray-400 px-2 border-l border-gray-200">
-                    {rec.instructor}
-                  </span>
+                  <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">
+                    <Star className="h-3 w-3 fill-amber-500" />
+                    <span className="text-[10px] font-black">{rec.rating}</span>
+                  </div>
                 </div>
                 
-                <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">
+                <h3 className="text-xl font-bold text-gray-900 mb-2 truncate group-hover:text-orange-600 transition-colors">
                   {rec.title}
                 </h3>
-                <p className="text-xs text-gray-500 mb-4 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-gray-500 mb-6 line-clamp-2 leading-relaxed">
                   {rec.description}
                 </p>
 

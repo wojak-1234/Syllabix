@@ -49,28 +49,45 @@ export default function CodingTestPage() {
   // 테마 (light/dark)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
-  const handleRunCode = () => {
+  const handleRunCode = async () => {
     setIsEvaluating(true)
+    setHint(null)
     
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/student/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          questionTitle: testBase.title,
+          questionDescription: testBase.description,
+          attempts
+        })
+      })
+      
+      if (!response.ok) throw new Error('Network response was not ok')
+      
+      const data = await response.json()
       const newAttempts = attempts + 1
       setAttempts(newAttempts)
 
-      if (code.includes("df['age']") && code.includes("30")) {
+      if (data.isCorrect) {
         setResult('success')
-        setHint(null)
+        setHint(data.feedback)
       } else {
         setResult('fail')
-        if (newAttempts < testBase.maxAttempts) {
-          setHint("조건문 인덱싱을 활용해본 적이 있나요? `df[조건]` 형태를 어떻게 적용할 수 있을지 생각해보세요.")
-        } else {
-          // 기회 3번 소진 시 오답노트 알림 표시 (계속 시도는 가능)
-          setHint("DataFrame의 인덱싱 문법에 대한 이해가 부족한 것으로 보입니다. 불리언 인덱싱의 원리를 다시 한번 확인해보는 것이 좋습니다.")
+        setHint(data.feedback)
+        
+        if (newAttempts >= testBase.maxAttempts) {
           setShowErrorNote(true)
         }
       }
+    } catch (error) {
+      console.error('Evaluation failed:', error)
+      setHint("AI 튜터가 잠시 자리를 비웠네요. 코드를 다시 점검하고 제출해 보세요.")
+    } finally {
       setIsEvaluating(false)
-    }, 1500)
+    }
   }
 
   const isDark = theme === 'dark'
@@ -309,10 +326,10 @@ export default function CodingTestPage() {
                    <CheckCircle2 className={cn("h-6 w-6", isDark ? "text-emerald-400" : "text-emerald-600")} />
                    <div>
                      <h4 className={cn("text-sm font-bold", isDark ? "text-emerald-400" : "text-emerald-800")}>
-                       모든 테스트 케이스를 통과했습니다!
+                       정답입니다! AI 튜터의 리뷰를 확인하세요.
                      </h4>
-                     <p className={cn("text-xs font-medium", isDark ? "text-emerald-200/70" : "text-emerald-600/80")}>
-                       훌륭합니다. 다음 단계로 학습을 이어가세요.
+                     <p className={cn("text-xs font-medium leading-relaxed", isDark ? "text-emerald-200/70" : "text-emerald-600/80")}>
+                       {hint}
                      </p>
                    </div>
                  </div>
