@@ -464,4 +464,26 @@ No.
 - Improvement Insight:
 인증(Auth) 미들웨어가 아직 없으므로, teacherId를 클라이언트에서 전달받는 구조. 추후 NextAuth 등 인증 시스템 도입 시 미들웨어로 전환 필요.
 
+#### Skill: Phase 2-B — Teacher Series 위자드 UI 구현
+- Timestamp: 2026-04-12T16:45:00+09:00
+- Task Description:
+Teacher API 백엔드 완료에 맞춰, 프론트엔드 대시보드 리뉴얼 및 커리큘럼(Series) 구성 위자드 UI를 구현.
 
+- Reason for Using This Skill:
+project-overview v3 문서에 따라, 교사가 직접 전체 커리큘럼 뼈대(강좌 목록, 개념 수준 등)를 디자인하도록 UI를 구성해야 함.
+
+- Execution Summary:
+1. `app/teacher/dashboard/page.tsx` 전면 교체: 수요 예측 대시보드를 버리고, 강사 커리큘럼 통계 및 목록 UI로 변경.
+2. `app/teacher/series/[id]/edit/page.tsx` 파일 신규 생성.
+3. 드래그 가능한 강좌 카드 인터페이스 구성 및 Mock Data 바인딩.
+4. 강좌 추가 모달 내 "핵심 개념 태그"를 List 구조로 다룰 수 있는 React 상태 적용.
+
+- Skills Applied:
+  - `coding-guidelines`: 최소 복잡성으로 MVP 플로우를 Mock Data 상에서 바로 증명함.
+  - `nextjs-best-practices`: 상호작용이 필요한 UI들을 `use client` 로 상단 분리하고 빠른 UX(Optimistic UI 스타일) 지향.
+
+- Result:
+교사의 커리큘럼 작성 흐름이 시각화됨. Phase 2-C(AI 코딩테스트 출제/API 연결 로직) 진행을 위한 UI 골격 100% 확보.
+
+- User Intervention:
+No.

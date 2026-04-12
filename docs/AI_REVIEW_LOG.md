@@ -161,5 +161,15 @@
 - **적용 스킬**: `coding-guidelines` (단순성 우선), `nextjs-best-practices` (Server Route Handler), `backend-security-coder` (Zod 입력 검증), `clean-code` (함수 단일 책임).
 - **검증**: `next build` 성공 ✅ (모든 API 라우트 정상 등록)
 
+### [2026-04-12] v3 구조 전환 — Phase 2-B: Teacher Series 위자드 UI
+
+- **타임스탬프**: 2026-04-12T16:45:00+09:00
+- **수행 작업**: Teacher 대시보드 리뉴얼 및 Series 편집 UI 구현.
+- **AI 결과**:
+  1. `app/teacher/dashboard/page.tsx`: 기존 수요 예측 UI를 제거하고, 내 커리큘럼(Series) 목록과 주요 통계를 보여주는 UI로 전면 교체. 새 커리큘럼 생성 모달 탑재.
+  2. `app/teacher/series/[id]/edit/page.tsx`: Series 상세 정보 및 강좌(Lecture) 구성 UI 구현. 드래그 가능한 강좌 카드, 강좌 추가 모달, 핵심 개념 태그 입력 지원.
+- **적용 스킬**: `coding-guidelines` (최소한의 복잡성으로 MVP 플로우 먼저 구성), `nextjs-best-practices` (클라이언트 상태 로직 격리).
+- **검증**: `next build` 성공 ✅ (에러 미검출). Mock 데이터를 사용한 UI 동작 확인.
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*

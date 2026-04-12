@@ -1,132 +1,207 @@
 'use client'
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Sparkles, 
-  Plus,
-  ChevronRight,
-  BookOpen,
-  AlertTriangle,
-  Zap,
-  Check,
-  X
-} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import {
+  Plus,
+  BookOpen,
+  Users,
+  ChevronRight,
+  Sparkles,
+  Zap,
+  GraduationCap,
+  Eye,
+  EyeOff,
+  Link2,
+  Pencil,
+  Trash2,
+  MoreHorizontal,
+} from "lucide-react"
 
-interface ThemeDemand {
-  theme: string
-  demandScore: number
-  studentCount: number
-  growthRate: number
-  avgBlindPointCount: number
-  topKeywords: string[]
+// ── 타입 정의 ────────────────────────────────────────────────────────
+
+interface SeriesSummary {
+  id: string
+  title: string
+  description: string | null
+  targetLevel: string
+  status: 'DRAFT' | 'PUBLISHED'
+  visibility: 'PUBLIC' | 'LINK_ONLY' | 'PRIVATE'
+  lectures: { id: string; title: string; order: number }[]
+  _count: { enrollments: number }
+  updatedAt: string
 }
 
-// ─── 막대그래프 컴포넌트 ────────────────────────────────────────────────
-function DemandBarChart({ data }: { data: ThemeDemand[] }) {
-  const maxScore = Math.max(...data.map(d => d.demandScore))
+// ── Mock 데이터 (DB 연결 전 데모용) ─────────────────────────────────
 
+const MOCK_SERIES: SeriesSummary[] = [
+  {
+    id: '1',
+    title: 'Python 기초부터 실전까지',
+    description: '프로그래밍 입문자를 위한 파이썬 완벽 가이드',
+    targetLevel: 'beginner',
+    status: 'PUBLISHED',
+    visibility: 'PUBLIC',
+    lectures: [
+      { id: 'l1', title: '변수와 자료형', order: 1 },
+      { id: 'l2', title: '조건문과 반복문', order: 2 },
+      { id: 'l3', title: '함수와 모듈', order: 3 },
+    ],
+    _count: { enrollments: 42 },
+    updatedAt: '2026-04-12T10:00:00Z',
+  },
+  {
+    id: '2',
+    title: 'React Hooks 마스터 클래스',
+    description: 'useState부터 커스텀 훅까지 완벽 이해',
+    targetLevel: 'intermediate',
+    status: 'DRAFT',
+    visibility: 'PRIVATE',
+    lectures: [
+      { id: 'l4', title: 'useState 깊이 이해하기', order: 1 },
+    ],
+    _count: { enrollments: 0 },
+    updatedAt: '2026-04-11T15:30:00Z',
+  },
+]
+
+// ── 레벨 뱃지 ────────────────────────────────────────────────────────
+
+function LevelBadge({ level }: { level: string }) {
+  const config: Record<string, { label: string; className: string }> = {
+    beginner: { label: '입문', className: 'bg-emerald-50 text-emerald-700' },
+    intermediate: { label: '중급', className: 'bg-amber-50 text-amber-700' },
+    advanced: { label: '고급', className: 'bg-rose-50 text-rose-700' },
+  }
+  const c = config[level] || config.beginner
+  return <Badge className={cn('border-none font-bold text-xs px-2.5 py-0.5', c.className)}>{c.label}</Badge>
+}
+
+// ── 공개 설정 아이콘 ─────────────────────────────────────────────────
+
+function VisibilityIcon({ visibility }: { visibility: string }) {
+  if (visibility === 'PUBLIC') return <Eye className="h-3.5 w-3.5 text-emerald-500" />
+  if (visibility === 'LINK_ONLY') return <Link2 className="h-3.5 w-3.5 text-amber-500" />
+  return <EyeOff className="h-3.5 w-3.5 text-gray-400" />
+}
+
+// ── Series 카드 ──────────────────────────────────────────────────────
+
+function SeriesCard({ series, onClick }: { series: SeriesSummary; onClick: () => void }) {
   return (
-    <div className="space-y-4">
-      {data.map((item, idx) => {
-        const widthPercent = (item.demandScore / maxScore) * 100
-        const barColor = 
-          item.demandScore >= 80 ? "from-emerald-500 to-teal-400" :
-          item.demandScore >= 60 ? "from-amber-500 to-orange-400" :
-          "from-slate-400 to-slate-300"
-        const bgColor = 
-          item.demandScore >= 80 ? "bg-emerald-50" :
-          item.demandScore >= 60 ? "bg-amber-50" :
-          "bg-slate-50"
+    <div
+      onClick={onClick}
+      className="group cursor-pointer bg-white/80 backdrop-blur-xl rounded-[2rem] p-7 border border-white/60 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-100/20 transition-all" />
 
-        return (
-          <div key={item.theme} className="group cursor-pointer">
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-black text-gray-400 w-5">{idx + 1}</span>
-                <span className="text-sm font-bold text-gray-900">{item.theme}</span>
-                {item.growthRate > 20 && (
-                  <Badge className="bg-rose-50 text-rose-600 border-none text-[10px] px-1.5 py-0 h-4 font-bold">
-                    <TrendingUp className="h-2.5 w-2.5 mr-0.5" /> HOT
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Users className="h-3 w-3" /> {item.studentCount}명
-                </span>
-                <span className={cn(
-                  "font-bold",
-                  item.growthRate > 0 ? "text-emerald-600" : "text-red-500"
-                )}>
-                  {item.growthRate > 0 ? "▲" : "▼"} {Math.abs(item.growthRate)}%
-                </span>
-              </div>
-            </div>
-            <div className="relative h-10 w-full bg-slate-100/60 rounded-xl overflow-hidden group-hover:bg-slate-100 transition-colors">
-              <div
-                className={cn(
-                  "absolute left-0 top-0 h-full rounded-xl bg-gradient-to-r transition-all duration-1000 ease-out flex items-center justify-end pr-3",
-                  barColor
-                )}
-                style={{ width: `${widthPercent}%` }}
-              >
-                <span className="text-white text-xs font-black drop-shadow-sm">
-                  {item.demandScore}점
-                </span>
-              </div>
-            </div>
-            {/* Expandable keywords */}
-            <div className="flex gap-1.5 mt-2 flex-wrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              {item.topKeywords.map(kw => (
-                <span key={kw} className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", bgColor, 
-                  item.demandScore >= 80 ? "text-emerald-700" :
-                  item.demandScore >= 60 ? "text-amber-700" : "text-slate-600"
-                )}>
-                  #{kw}
-                </span>
-              ))}
-            </div>
-          </div>
-        )
-      })}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <LevelBadge level={series.targetLevel} />
+          <Badge className={cn(
+            'border-none font-bold text-[10px] px-2 py-0.5',
+            series.status === 'PUBLISHED'
+              ? 'bg-emerald-500 text-white'
+              : 'bg-gray-100 text-gray-500'
+          )}>
+            {series.status === 'PUBLISHED' ? '공개됨' : '작성 중'}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <VisibilityIcon visibility={series.visibility} />
+          <button
+            onClick={e => { e.stopPropagation() }}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
+          >
+            <MoreHorizontal className="h-4 w-4 text-gray-400" />
+          </button>
+        </div>
+      </div>
+
+      <h3 className="text-lg font-bold text-gray-900 mb-1.5 group-hover:text-emerald-700 transition-colors">
+        {series.title}
+      </h3>
+      {series.description && (
+        <p className="text-sm text-gray-500 mb-4 line-clamp-2">{series.description}</p>
+      )}
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4 text-xs text-gray-400">
+          <span className="flex items-center gap-1">
+            <BookOpen className="h-3.5 w-3.5" />
+            {series.lectures.length}개 강좌
+          </span>
+          <span className="flex items-center gap-1">
+            <Users className="h-3.5 w-3.5" />
+            {series._count.enrollments}명 수강
+          </span>
+        </div>
+        <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+      </div>
     </div>
   )
 }
 
-// ─── 강의 생성 모달 ─────────────────────────────────────────────────────
-function CreateLectureModal({ theme, onClose }: { theme: ThemeDemand | null, onClose: () => void }) {
-  const [title, setTitle] = useState("")
-  const [difficulty, setDifficulty] = useState("beginner")
-  const [generating, setGenerating] = useState(false)
+// ── 새 Series 생성 카드 ──────────────────────────────────────────────
 
-  useEffect(() => {
-    if (theme) {
-      setTitle(`${theme.theme} 마스터 클래스`)
-      setGenerating(false)
-    }
-  }, [theme])
+function CreateSeriesCard({ onClick }: { onClick: () => void }) {
+  return (
+    <div
+      onClick={onClick}
+      className="group cursor-pointer border-2 border-dashed border-gray-200 hover:border-emerald-300 rounded-[2rem] p-7 flex flex-col items-center justify-center text-center min-h-[200px] transition-all duration-300 hover:bg-emerald-50/30"
+    >
+      <div className="h-14 w-14 rounded-2xl bg-gray-100 group-hover:bg-emerald-100 flex items-center justify-center mb-4 transition-colors">
+        <Plus className="h-7 w-7 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+      </div>
+      <p className="font-bold text-gray-500 group-hover:text-emerald-700 transition-colors">
+        새 커리큘럼 만들기
+      </p>
+      <p className="text-xs text-gray-400 mt-1">AI가 구성을 도와드립니다</p>
+    </div>
+  )
+}
 
-  if (!theme) return null
+// ── 새 Series 생성 모달 ──────────────────────────────────────────────
 
-  const handleGenerateWithAI = () => {
-    setGenerating(true)
-    // sessionStorage에 요청 데이터 저장 후 초안 페이지로 이동
-    sessionStorage.setItem('lectureGenRequest', JSON.stringify({
-      theme: theme.theme,
-      title: title,
-      keywords: theme.topKeywords,
-      difficulty: difficulty
+function CreateSeriesModal({
+  open,
+  onClose,
+}: {
+  open: boolean
+  onClose: () => void
+}) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [targetLevel, setTargetLevel] = useState('beginner')
+  const [creating, setCreating] = useState(false)
+
+  if (!open) return null
+
+  const handleCreate = async () => {
+    if (!title.trim()) return
+    setCreating(true)
+
+    // TODO: DB 연결 후 실제 API 호출로 교체
+    // const res = await fetch('/api/teacher/series', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ teacherId: 'mock-teacher-id', title, description, targetLevel }),
+    // })
+
+    // 임시: sessionStorage에 저장 후 강좌 편집 페이지로 이동
+    const newSeriesId = 'new-' + Date.now()
+    sessionStorage.setItem('newSeries', JSON.stringify({
+      id: newSeriesId,
+      title,
+      description,
+      targetLevel,
     }))
-    window.location.href = '/teacher/lecture-draft'
+    window.location.href = `/teacher/series/${newSeriesId}/edit`
   }
 
   return (
@@ -134,90 +209,84 @@ function CreateLectureModal({ theme, onClose }: { theme: ThemeDemand | null, onC
       <div className="bg-white rounded-[2rem] p-8 w-full max-w-lg shadow-2xl border border-white/60 animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
-            <Plus className="h-5 w-5 text-emerald-500" /> AI 강의 초안 생성
+            <Sparkles className="h-5 w-5 text-emerald-500" />
+            새 커리큘럼 만들기
           </h3>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
-            <X className="h-5 w-5 text-gray-400" />
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-gray-400 hover:text-gray-600">
+            ✕
           </button>
         </div>
 
-        <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-          <p className="text-xs font-bold text-emerald-600 mb-1">AI 추천 테마 기반</p>
-          <p className="text-sm font-bold text-gray-900">{theme.theme}</p>
-          <p className="text-xs text-gray-500 mt-1">
-            현재 {theme.studentCount}명의 학생이 관심을 보이고 있으며, 수요 지수 {theme.demandScore}점입니다.
-          </p>
-        </div>
-
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">강의 제목</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">
+              커리큘럼 제목 *
+            </label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
+              placeholder="예: Python 기초부터 실전까지"
               className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-300 transition-all"
             />
           </div>
+
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">난이도 설정</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">
+              설명
+            </label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="커리큘럼에 대한 간단한 설명"
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-300 transition-all resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">
+              대상 수준 *
+            </label>
             <div className="flex gap-3">
               {[
-                { value: "beginner", label: "입문" },
-                { value: "intermediate", label: "중급" },
-                { value: "advanced", label: "고급" }
+                { value: 'beginner', label: '입문', icon: '🌱' },
+                { value: 'intermediate', label: '중급', icon: '🌿' },
+                { value: 'advanced', label: '고급', icon: '🌳' },
               ].map(opt => (
                 <button
                   key={opt.value}
-                  onClick={() => setDifficulty(opt.value)}
+                  onClick={() => setTargetLevel(opt.value)}
                   className={cn(
-                    "flex-1 h-10 rounded-xl text-sm font-bold transition-all duration-200 border-2",
-                    difficulty === opt.value
+                    "flex-1 h-12 rounded-xl text-sm font-bold transition-all duration-200 border-2 flex items-center justify-center gap-1.5",
+                    targetLevel === opt.value
                       ? "bg-emerald-50 border-emerald-400 text-emerald-700 shadow-sm"
                       : "bg-white border-slate-200 text-gray-400 hover:border-slate-300"
                   )}
                 >
-                  {opt.label}
+                  {opt.icon} {opt.label}
                 </button>
               ))}
             </div>
           </div>
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">관련 키워드</label>
-            <div className="flex flex-wrap gap-2">
-              {theme.topKeywords.map(kw => (
-                <span key={kw} className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                  {kw}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* AI 생성 안내 */}
-        <div className="mt-6 p-3 rounded-xl bg-slate-50 border border-slate-100">
-          <p className="text-[11px] text-gray-500 font-medium flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-emerald-500" />
-            AI가 목차 → 강의 내용 → 진단 문제를 순차적으로 자동 생성합니다.
-          </p>
         </div>
 
         <Button
-          onClick={handleGenerateWithAI}
-          disabled={generating || !title.trim()}
+          onClick={handleCreate}
+          disabled={creating || !title.trim()}
           className={cn(
-            "w-full h-14 mt-4 rounded-2xl font-bold text-base transition-all",
+            "w-full h-14 mt-6 rounded-2xl font-bold text-base transition-all",
             "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:scale-95"
           )}
         >
-          {generating ? (
+          {creating ? (
             <span className="flex items-center gap-2">
               <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              준비 중...
+              생성 중...
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" /> AI로 강의 초안 생성하기
+              <Plus className="h-4 w-4" /> 커리큘럼 생성하기
             </span>
           )}
         </Button>
@@ -226,33 +295,15 @@ function CreateLectureModal({ theme, onClose }: { theme: ThemeDemand | null, onC
   )
 }
 
+// ── 메인 페이지 ──────────────────────────────────────────────────────
 
-
-// ─── 메인 페이지 ────────────────────────────────────────────────────────
 export default function TeacherDashboardPage() {
-  const [demandData, setDemandData] = useState<ThemeDemand[]>([])
-  const [metadata, setMetadata] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [selectedTheme, setSelectedTheme] = useState<ThemeDemand | null>(null)
-
-  useEffect(() => {
-    const fetchDemand = async () => {
-      try {
-        const res = await fetch('/api/teacher/demand')
-        const json = await res.json()
-        setDemandData(json.data)
-        setMetadata(json.metadata)
-      } catch (err) {
-        console.error("Demand fetch error:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchDemand()
-  }, [])
+  const [seriesList] = useState<SeriesSummary[]>(MOCK_SERIES)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const teacherName = "홍길동"
-  const topTheme = demandData[0]
+  const publishedCount = seriesList.filter(s => s.status === 'PUBLISHED').length
+  const totalEnrollments = seriesList.reduce((sum, s) => sum + s._count.enrollments, 0)
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50/50 pb-20">
@@ -264,145 +315,73 @@ export default function TeacherDashboardPage() {
         <div className="mb-10 space-y-2">
           <div className="flex items-center gap-2 mb-1">
             <Badge className="bg-emerald-100 text-emerald-700 border-none px-3 py-1 text-xs font-bold flex items-center gap-1.5">
-              <Zap className="h-3 w-3" /> 교사 전용 대시보드
+              <Zap className="h-3 w-3" /> 교사 대시보드
             </Badge>
           </div>
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-            {teacherName} 선생님, 안녕하세요
+            {teacherName} 선생님의 커리큘럼
           </h1>
           <p className="text-gray-500 font-medium">
-            학생들의 학습 데이터를 분석하여 가장 효과적인 강의 테마를 추천합니다.
+            커리큘럼을 설계하고 강좌를 구성하세요. AI가 전 과정을 보조합니다.
           </p>
         </div>
 
-        {loading ? (
-          <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-6">
-            <div className="h-16 w-16 bg-gradient-to-br from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center shadow-xl rotate-6">
-              <BarChart3 className="h-8 w-8 text-white animate-pulse" />
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-10">
+          <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-emerald-600" />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">전체 커리큘럼</p>
             </div>
-            <p className="text-gray-500 font-medium">수요 데이터를 분석하고 있습니다...</p>
+            <p className="text-3xl font-black text-gray-900">
+              {seriesList.length}<span className="text-base text-gray-400 ml-1">개</span>
+            </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left: Stats + Chart */}
-            <div className="lg:col-span-8 space-y-8">
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">전체 수요 학생</p>
-                  </div>
-                  <p className="text-3xl font-black text-gray-900">{metadata?.totalStudents?.toLocaleString() || 0}<span className="text-base text-gray-400 ml-1">명</span></p>
-                </div>
-                <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                      <TrendingUp className="h-5 w-5 text-amber-600" />
-                    </div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">최고 성장 테마</p>
-                  </div>
-                  <p className="text-lg font-black text-gray-900 truncate">{demandData.sort((a,b) => b.growthRate - a.growthRate)[0]?.theme || "-"}</p>
-                  <p className="text-xs text-emerald-600 font-bold">▲ {demandData.sort((a,b) => b.growthRate - a.growthRate)[0]?.growthRate}%</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-xl bg-rose-50 flex items-center justify-center">
-                      <AlertTriangle className="h-5 w-5 text-rose-500" />
-                    </div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">최다 취약점 테마</p>
-                  </div>
-                  <p className="text-lg font-black text-gray-900 truncate">{demandData.sort((a,b) => b.avgBlindPointCount - a.avgBlindPointCount)[0]?.theme || "-"}</p>
-                  <p className="text-xs text-rose-500 font-bold">평균 {demandData.sort((a,b) => b.avgBlindPointCount - a.avgBlindPointCount)[0]?.avgBlindPointCount}건</p>
-                </div>
+          <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                <GraduationCap className="h-5 w-5 text-amber-600" />
               </div>
-
-              {/* Main Chart Card */}
-              <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] p-10 border border-white/60 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-100/20 rounded-full -mr-24 -mt-24 blur-3xl" />
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
-                      <BarChart3 className="h-6 w-6 text-emerald-500" /> 테마별 학습 수요 지수
-                    </h2>
-                    <p className="text-xs text-gray-400 mt-1">BlindPoint + ActivityLog 데이터 기반 AI 집계 결과</p>
-                  </div>
-                  <Badge className="bg-slate-100 text-slate-600 border-none text-[10px] font-bold">
-                    {new Date().toLocaleDateString('ko-KR')} 기준
-                  </Badge>
-                </div>
-                <DemandBarChart data={demandData.sort((a,b) => b.demandScore - a.demandScore)} />
-              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">공개 중</p>
             </div>
-
-            {/* Right: AI Recommendation + Quick Actions */}
-            <div className="lg:col-span-4 space-y-6">
-              <div className="sticky top-28 space-y-6">
-                {/* AI Recommendation Card */}
-                <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-emerald-500/20 relative overflow-hidden">
-                  <div className="absolute -bottom-8 -right-8 opacity-10">
-                    <Sparkles className="h-36 w-36" />
-                  </div>
-                  <div className="relative z-10">
-                    <h3 className="text-lg font-black mb-2 flex items-center gap-2">
-                      <Sparkles className="h-5 w-5" /> AI 추천
-                    </h3>
-                    <p className="text-emerald-100 text-sm font-medium mb-6 leading-relaxed">
-                      <strong>{teacherName}</strong> 선생님에게 가장 적합한 강의 테마를 데이터 기반으로 추천합니다.
-                    </p>
-
-                    {topTheme && (
-                      <div className="bg-white/15 backdrop-blur-md rounded-2xl p-5 mb-4 border border-white/20">
-                        <p className="text-[10px] font-bold text-emerald-200 uppercase tracking-widest mb-1">1순위 추천</p>
-                        <p className="text-xl font-black mb-2">{topTheme.theme}</p>
-                        <div className="flex items-center gap-4 text-xs">
-                          <span>수요 {topTheme.demandScore}점</span>
-                          <span>학생 {topTheme.studentCount}명</span>
-                          <span className="text-emerald-200">▲ {topTheme.growthRate}%</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button 
-                      onClick={() => topTheme && setSelectedTheme(topTheme)}
-                      className="w-full h-12 rounded-2xl bg-white text-emerald-700 font-bold hover:bg-emerald-50 transition-all active:scale-95"
-                    >
-                      <Plus className="h-4 w-4 mr-2" /> 이 테마로 강의 만들기
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Quick Pick List */}
-                <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/60 shadow-lg">
-                  <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-emerald-500" /> 빠른 강의 생성
-                  </h4>
-                  <div className="space-y-2">
-                    {demandData.slice(0, 4).map(theme => (
-                      <button
-                        key={theme.theme}
-                        onClick={() => setSelectedTheme(theme)}
-                        className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-emerald-50 transition-colors text-left group"
-                      >
-                        <div>
-                          <p className="text-sm font-bold text-gray-900">{theme.theme}</p>
-                          <p className="text-[11px] text-gray-400">{theme.studentCount}명 · 수요 {theme.demandScore}점</p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-emerald-500 transition-colors" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-3xl font-black text-gray-900">
+              {publishedCount}<span className="text-base text-gray-400 ml-1">개</span>
+            </p>
           </div>
-        )}
+          <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                <Users className="h-5 w-5 text-indigo-600" />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">총 수강생</p>
+            </div>
+            <p className="text-3xl font-black text-gray-900">
+              {totalEnrollments}<span className="text-base text-gray-400 ml-1">명</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Series Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {seriesList.map(series => (
+            <SeriesCard
+              key={series.id}
+              series={series}
+              onClick={() => {
+                window.location.href = `/teacher/series/${series.id}/edit`
+              }}
+            />
+          ))}
+          <CreateSeriesCard onClick={() => setShowCreateModal(true)} />
+        </div>
       </div>
 
-      {/* Create Lecture Modal */}
-      <CreateLectureModal theme={selectedTheme} onClose={() => setSelectedTheme(null)} />
+      <CreateSeriesModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
 
       <Footer />
     </main>
