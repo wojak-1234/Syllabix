@@ -750,3 +750,26 @@ No.
 
 - User Intervention:
 No.
+
+#### Skill: Phase 3-C — 학생 코딩테스트 및 Socratic Hint UI 구현
+- Timestamp: 2026-04-12T17:00:00+09:00
+- Task Description:
+학생 측의 실전 코딩테스트 화면을 구현. 3번의 제출 제한, 제출 실패 시 힌트 제공, 3번 실패 시 Error Note(오답 노트) 강제 전환 로직 작성.
+
+- Reason for Using This Skill:
+project-overview v3 명세서 T-03~T-04 에 지정된 학습의 핵심 피드백 루프(오답노트 생성 과정)를 화면으로 구현해야 함.
+
+- Execution Summary:
+1. `app/learn/[seriesId]/lecture/[lectureId]/coding-test/page.tsx` 생성.
+2. 상태 변수 `attempts`, `result`, `hint`, `showErrorNote` 를 종합하여 채점 프로세스 딜레이(Mock)와 정/오답 판정 뷰 렌더링.
+3. 제출 기회를 표시하는 인디케이터(알약 모양) 추가 및 3회 오답 시 오답 노트 모달(Full-screen)로 대체.
+
+- Skills Applied:
+  - `ui-builder`: 터미널/에디터 느낌을 주는 다크 테마 기반 코드 패널, 직관적인 제출 기회 표시.
+  - `coding-guidelines`: 실제 백엔드 컴파일러 없이도 프론트엔드의 Mock Timeout/인클루드 문법으로 작동성 확보(지름길).
+
+- Result:
+v3의 가장 큰 특징인 '오답에 대한 Socratic Hint 도출 및 Error Note 연동'이라는 백엔드 연동 전 UI 플로우가 완전히 동작하게 됨.
+
+- User Intervention:
+No.

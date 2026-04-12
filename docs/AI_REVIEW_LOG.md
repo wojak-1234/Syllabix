@@ -202,5 +202,15 @@
 - **적용 스킬**: `ui-builder` (명확한 정보 분할과 Tailwind Typography 활용).
 - **검증**: `next build` 성공 ✅.
 
+### [2026-04-12] v3 구조 전환 — Phase 3-C: 학생 실전 코딩테스트 및 오답 힌트 UI
+
+- **타임스탬프**: 2026-04-12T17:00:00+09:00
+- **수행 작업**: 학생이 강좌(Lecture)에 딸린 코딩테스트를 풀고, 소크라테스 힌트를 받으며 3회 오답 시 오답 노트 화면으로 빠지는 플로우 구현.
+- **AI 결과**:
+  1. `app/learn/[seriesId]/lecture/[lectureId]/coding-test/page.tsx`: 왼쪽은 문제 설명(Prose), 오른쪽 영역은 IDE를 모사한 텍스트 에어리어 및 체점 모듈 윈도우.
+  2. `isEvaluating`, `attempts`, `showErrorNote` 등의 상태를 조합하여 Socratic Hint(모의) 표출 및 제출 제한 UI 로직 확보.
+- **적용 스킬**: `ui-builder` (세부 상태 관리 및 동적 UI 피드백), `coding-guidelines` (Mock Code로 MVP 작동성 우선 확보).
+- **검증**: `next build` 성공 ✅.
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*
