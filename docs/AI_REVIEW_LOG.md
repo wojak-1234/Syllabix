@@ -234,5 +234,17 @@
 - **적용 스킬**: `ui-builder` (경로 변경 후에도 깨지지 않는 UI 일치성 유지).
 - **검증**: `next build` 성공 ✅.
 
+### [2026-04-12] v3 구조 전환 — Phase 4: 강사 Blind Point 대시보드 및 AI 강화 구현
+
+- **타임스탬프**: 2026-04-12T17:35:00+09:00
+- **수행 작업**: 강사가 수강생의 학습 성취도를 분석하고 취약 구간(Blind Points)을 개선할 수 있는 인텔리전스 도구 구축.
+- **AI 결과**:
+  1. `app/teacher/series/[id]/analytics/page.tsx`: 강좌별 이해도 히트맵 및 발견된 Blind Point 리스트 시각화.
+  2. 에러 패턴 기반 **AI 강의 개선 제안** 노출 및 "보충 강좌 즉시 추가" 액션 플로우 구현.
+  3. `app/api/teacher/series/[id]/supplement/route.ts`: 보충 강의 자동 삽입을 위한 백엔드 엔드포인트 설계.
+  4. 강사 대시보드(`app/teacher/dashboard`)에서 각 시리즈별 분석 리포트로 진입하는 경로 연결.
+- **적용 스킬**: `ui-builder` (데이터 시각화 및 인사이트 중심 레이아웃), `logic-layer` (분석 트리거 및 자동 삽입 프로세스).
+- **검증**: `next build` 성공 ✅.
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*

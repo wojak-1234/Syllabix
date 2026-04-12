@@ -21,6 +21,7 @@ import {
   Pencil,
   Trash2,
   MoreHorizontal,
+  BarChart3
 } from "lucide-react"
 
 // ── 타입 정의 ────────────────────────────────────────────────────────
@@ -141,7 +142,20 @@ function SeriesCard({ series, onClick }: { series: SeriesSummary; onClick: () =>
             {series._count.enrollments}명 수강
           </span>
         </div>
-        <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+        
+        <div className="flex items-center gap-2">
+          <Button 
+             variant="outline" 
+             className="h-8 rounded-lg text-xs font-bold border-emerald-100 text-emerald-600 hover:bg-emerald-50"
+             onClick={(e) => {
+               e.stopPropagation();
+               window.location.href=`/teacher/series/${series.id}/analytics`;
+             }}
+          >
+            <BarChart3 className="h-3 w-3 mr-1.5" /> 분석 리포트
+          </Button>
+          <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+        </div>
       </div>
     </div>
   )

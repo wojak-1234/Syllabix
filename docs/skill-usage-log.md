@@ -796,3 +796,26 @@ No.
 
 - User Intervention:
 No.
+
+#### Skill: Phase 4 — 강사용 Blind Point 인텔리전스 및 보충 커리큘럼 자동 연동
+- Timestamp: 2026-04-12T17:36:00+09:00
+- Task Description:
+강사가 수강생들의 고질적인 오답 패턴(Blind Points)을 발견하고, 클릭 한 번으로 커리큘럼을 보강할 수 있는 통합 분석 도구 구현.
+
+- Reason for Using This Skill:
+데이터 기반의 강의 개선(Data-Driven Instruction)은 v3의 핵심 강화 포인트임. 이를 위해 단순 통계가 아닌 'AI 제안'과 '직관적 분석'이 결합된 UI가 필요함.
+
+- Execution Summary:
+1. `app/teacher/series/[id]/analytics/page.tsx` 리포트 페이지 설계.
+2. 성취도 히트맵(강좌별), 취약점 상세 분석(에러 패턴-강의 매칭), AI 개선 가이드 순으로 정보 배치.
+3. `handleAddSupplement` 핸들러를 통해 커리큘럼 보강 자동화 프로세스 시뮬레이션.
+
+- Skills Applied:
+  - `ui-builder`: 리포트 성격의 데이터 가시화(Heatmap) 및 카드 위계 설정.
+  - `logic-layer`: 분석 결과로부터 후속 액션(강좌 보충)으로 이어지는 사용자 플로우 설계.
+
+- Result:
+공급자(강사)가 학생의 취약점을 선제적으로 파악하고 강의를 고도화할 수 있는 강력한 '피드백 루프' 완성.
+
+- User Intervention:
+No.
