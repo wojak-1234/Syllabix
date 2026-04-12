@@ -432,3 +432,36 @@ No (Phase 1 진행 지시에 따라 자율 실행).
 - Improvement Insight:
 실제 PostgreSQL 연결 후 `prisma migrate dev`로 마이그레이션 수행 필요. 현재는 placeholder URL이므로 스킵.
 
+#### Skill: Phase 2-A — Teacher CRUD API 구현
+- Timestamp: 2026-04-12T16:38:00+09:00
+- Task Description:
+v3 Teacher 영역의 Series/Lecture/Quiz/CodingTest CRUD API를 구현하고, 입력 검증 및 빌드 검증 수행.
+
+- Reason for Using This Skill:
+Phase 2 (Teacher 핵심)의 첫 번째 청크로, UI 구현 전에 백엔드 API 기반을 먼저 확보해야 함.
+
+- Execution Summary:
+1. `lib/prisma.ts` 생성: Prisma Client 싱글턴 패턴 (nextjs-best-practices 스킬 적용).
+2. `lib/validations.ts` 생성: Zod 스키마 중앙 관리 (backend-security-coder 스킬 적용 — 입력 검증 일원화).
+3. `api/teacher/series/route.ts`: Series 목록 조회 + 생성. GET에서 teacherId 필터, POST에서 Zod 검증.
+4. `api/teacher/series/[id]/route.ts`: 상세 조회(Lectures+Quiz+CodingTest include) + PATCH + DELETE(Cascade).
+5. `api/teacher/series/[id]/lectures/route.ts`: Lecture 목록 + 생성(자동 order 할당) + 순서 재정렬(PUT, $transaction).
+6. `api/teacher/series/[id]/lectures/[lectureId]/route.ts`: Lecture CRUD + Quiz/CodingTest 추가(POST, type 분기).
+7. `next build` 검증 통과 (모든 라우트 정상 등록).
+
+- Skills Applied:
+  - `coding-guidelines`: 단순성 우선 — 불필요한 추상화 없이 직접적인 Route Handler 구현.
+  - `nextjs-best-practices`: Server Route Handler 패턴, proper status codes.
+  - `backend-security-coder`: Zod 입력 검증, 에러 메시지에 내부 정보 비노출.
+  - `clean-code`: 함수 단일 책임, 의미 있는 이름, 20줄 이하 함수.
+
+- Result:
+Teacher 영역의 전체 CRUD API 기반 완성. Phase 2-B (UI) 구현 준비 완료.
+
+- User Intervention:
+No.
+
+- Improvement Insight:
+인증(Auth) 미들웨어가 아직 없으므로, teacherId를 클라이언트에서 전달받는 구조. 추후 NextAuth 등 인증 시스템 도입 시 미들웨어로 전환 필요.
+
+

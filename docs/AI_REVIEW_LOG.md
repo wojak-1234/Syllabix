@@ -147,5 +147,19 @@
   - `Submission`에 `attemptNumber` unique 제약 추가하여 3회 제출 제한을 DB 레벨에서 보장.
   - `ErrorNote`는 Quiz/CodingTest 양쪽 소스를 `sourceType` + `sourceId`로 다형적(polymorphic) 참조.
 
+### [2026-04-12] v3 구조 전환 — Phase 2-A: Teacher CRUD API
+
+- **타임스탬프**: 2026-04-12T16:38:00+09:00
+- **수행 작업**: Teacher Series/Lecture/Quiz/CodingTest CRUD API 전체 구현.
+- **AI 결과**:
+  1. `lib/prisma.ts`: Prisma Client 싱글턴 패턴 생성 (hot-reload 중복 인스턴스 방지).
+  2. `lib/validations.ts`: Zod 스키마 중앙 관리 (Series, Lecture, Quiz, CodingTest, Reorder).
+  3. `api/teacher/series/route.ts`: Series 목록 조회(GET) + 생성(POST).
+  4. `api/teacher/series/[id]/route.ts`: Series 상세 조회(GET) + 수정(PATCH) + 삭제(DELETE, Cascade).
+  5. `api/teacher/series/[id]/lectures/route.ts`: Lecture 목록(GET) + 생성(POST, 자동 순서) + 순서 재정렬(PUT, 트랜잭션).
+  6. `api/teacher/series/[id]/lectures/[lectureId]/route.ts`: Lecture 상세(GET) + 수정(PATCH) + 삭제(DELETE) + Quiz/CodingTest 추가(POST, type 분기).
+- **적용 스킬**: `coding-guidelines` (단순성 우선), `nextjs-best-practices` (Server Route Handler), `backend-security-coder` (Zod 입력 검증), `clean-code` (함수 단일 책임).
+- **검증**: `next build` 성공 ✅ (모든 API 라우트 정상 등록)
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*
