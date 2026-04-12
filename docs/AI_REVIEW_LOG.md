@@ -192,5 +192,15 @@
 - **적용 스킬**: `coding-guidelines` (한 번에 하나의 명확한 목표), `nextjs-best-practices`.
 - **검증**: `next build` 성공 ✅.
 
+### [2026-04-12] v3 구조 전환 — Phase 3-B: 학생 강좌(Lecture) UI 구현
+
+- **타임스탬프**: 2026-04-12T16:58:00+09:00
+- **수행 작업**: 학생이 선택한 커리큘럼(Series)의 학습 목차를 보고, 실제 강의(Lecture) 콘텐츠와 퀴즈를 소비하는 UI 프레임 구축.
+- **AI 결과**:
+  1. `app/learn/[seriesId]/page.tsx`: 수강 중인 특정 커리큘럼의 전체 진행률(SVGs) 및 파편화된 목차(List) 시각화.
+  2. `app/learn/[seriesId]/lecture/[lectureId]/page.tsx`: 왼쪽에는 마크다운 스타일의 강의 본문(Prose), 오른쪽에는 상태(State)를 가진 실시간 채점 퀴즈(Quiz) 패널 분리 배치.
+- **적용 스킬**: `ui-builder` (명확한 정보 분할과 Tailwind Typography 활용).
+- **검증**: `next build` 성공 ✅.
+
 ---
 *본 로그는 `skill-usage-logger` 스킬에 의해 자동 생성 및 관리됩니다.*

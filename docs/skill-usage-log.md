@@ -727,3 +727,26 @@ project-overview v3 설계상, 학생은 챗봇(AI)에게 커리큘럼 자체를
 
 - User Intervention:
 No.
+
+#### Skill: Phase 3-B — 학생 강좌(Lecture) UI 슬플릿 뷰 기법
+- Timestamp: 2026-04-12T16:58:00+09:00
+- Task Description:
+학생이 커리큘럼(Series) 진도를 확인하고, 개별 강좌(Lecture)를 학습하며 퀴즈를 푸는 View 구현.
+
+- Reason for Using This Skill:
+읽기(본문)와 평가(퀴즈)가 한 화면에서 매끄럽게 이루어지는 split(분할) 레이아웃은 코딩/온라인 교육 플랫폼의 모범 사례(Best Practice)임.
+
+- Execution Summary:
+1. `app/learn/[seriesId]/page.tsx`: Series 목차 화면, SVG Circle 속성 기반 진도율 차트 구현.
+2. `app/learn/[seriesId]/lecture/[lectureId]/page.tsx`: 2-Column 레이아웃. 좌측 본문 공간(`prose` 활용), 우측 사이드바 퀴즈 패널 구현.
+3. 퀴즈 패널: 풀기 전 → 풀기 상태 제어(`quizResult`) → 오답/정답 피드백 → 다음 코딩테스트 전환의 Flow를 State 기반으로 처리 완료.
+
+- Skills Applied:
+  - `ui-builder`: Split View 구조. Tailwind Typography 플러그인 대응 클래스 적용.
+  - `coding-guidelines`: 퀴즈 로직을 Mock 데이터에 결합하여 API 연결 전에 프론트엔드 액션을 안전하게 보장.
+
+- Result:
+학생이 강의를 소비하고 지식을 즉각 점검하는 MVP 핵심 경로 완성.
+
+- User Intervention:
+No.
