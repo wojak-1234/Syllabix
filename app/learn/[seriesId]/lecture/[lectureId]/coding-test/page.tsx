@@ -15,8 +15,11 @@ import {
   Sun,
   Moon,
   ChevronRight,
-  X
+  X,
+  History,
+  MessageSquare
 } from "lucide-react";
+import Editor from "@monaco-editor/react";
 
 // ── Mock Data ────────────────────────────────────────────────────────
 
@@ -36,21 +39,75 @@ def solution(df):
   maxAttempts: 3
 };
 
+interface DynamicTest {
+  id?: string;
+  title: string;
+  description: string;
+  starterCode: string;
+  testCases: any[];
+  maxAttempts: number;
+}
+
 export default function CodingTestPage({ params }: { params: Promise<{ seriesId: string, lectureId: string }> }) {
   const resolvedParams = use(params);
-  const [testBase] = useState(MOCK_TEST);
-  const [code, setCode] = useState(MOCK_TEST.starterCode);
+  
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [testBase, setTestBase] = useState<DynamicTest | null>(null);
+  const [code, setCode] = useState("");
+  
   const [attempts, setAttempts] = useState(0);
   const [result, setResult] = useState<'pending' | 'success' | 'fail'>('pending');
   const [hint, setHint] = useState<string | null>(null);
+  const [hintHistory, setHintHistory] = useState<string[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [showErrorNote, setShowErrorNote] = useState(false);
   const [dismissErrorNote, setDismissErrorNote] = useState(false);
   
+  // AI Chat states
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  
   // 테마 (light/dark)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
+  // AI 문제 자동 생성 Hook
+  useEffect(() => {
+    const fetchPersonalizedTest = async () => {
+      setIsGenerating(true);
+      try {
+        const res = await fetch('/api/student/generate-test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            studentId: 'user-1', 
+            lectureId: resolvedParams.lectureId 
+          })
+        });
+        if (!res.ok) throw new Error("Failed to generate test");
+        const json = await res.json();
+        
+        // Ensure maxAttempts exists
+        const newTest = { ...json.data, maxAttempts: json.data.maxAttempts || 3, id: 'dynamic-' + Date.now() };
+        setTestBase(newTest);
+        setCode(newTest.starterCode || "");
+      } catch (err) {
+        console.error(err);
+        // 오류 시 기본 모의 테스트 제공
+        setTestBase(MOCK_TEST);
+        setCode(MOCK_TEST.starterCode);
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+    
+    fetchPersonalizedTest();
+  }, [resolvedParams.lectureId]);
+
   const handleRunCode = async () => {
+    if (!testBase) return;
     setIsEvaluating(true);
     setHint(null);
     
@@ -68,7 +125,10 @@ export default function CodingTestPage({ params }: { params: Promise<{ seriesId:
         })
       });
       
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Network response was not ok');
+      }
       
       const data = await response.json();
       const newAttempts = attempts + 1;
@@ -77,9 +137,11 @@ export default function CodingTestPage({ params }: { params: Promise<{ seriesId:
       if (data.isCorrect) {
         setResult('success');
         setHint(data.feedback);
+        setHintHistory(prev => [...prev, data.feedback]);
       } else {
         setResult('fail');
         setHint(data.feedback);
+        setHintHistory(prev => [...prev, data.feedback]);
         
         if (newAttempts >= testBase.maxAttempts) {
           setShowErrorNote(true);
@@ -93,9 +155,58 @@ export default function CodingTestPage({ params }: { params: Promise<{ seriesId:
     }
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isChatLoading) return;
+
+    const userMsg = { role: 'user' as const, content: chatInput };
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+    setIsChatLoading(true);
+
+    try {
+      const response = await fetch('/api/student/tutor-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...chatMessages, userMsg],
+          code,
+          questionTitle: testBase.title,
+          questionDescription: testBase.description
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Chat failed');
+      }
+      const data = await response.json();
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
+    } catch (err) {
+      console.error(err);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: "죄송합니다. 튜터와 연결이 잠시 끊겼습니다." }]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
   const isDark = theme === 'dark';
 
+  if (isGenerating || !testBase) {
+    return (
+      <div className={cn(
+        "min-h-screen flex flex-col items-center justify-center transition-colors duration-500",
+        isDark ? "bg-slate-900 text-slate-300" : "bg-slate-50 text-slate-900"
+      )}>
+        <Sparkles className="h-12 w-12 text-emerald-500 animate-pulse mb-6" />
+        <h2 className="text-xl font-bold tracking-tight mb-2">AI 튜터가 당신만을 위한 문제를 고민 중입니다...</h2>
+        <p className="text-sm font-medium opacity-60">최근의 학습 패턴과 실수를 분석하여 가장 완벽한 난이도를 찾고 있어요.</p>
+      </div>
+    );
+  }
+
   return (
+    <>
     <main className={cn(
       "relative h-screen flex flex-col overflow-hidden transition-colors duration-500",
       isDark ? "bg-slate-900 text-slate-300" : "bg-slate-50 text-slate-900"
@@ -126,7 +237,7 @@ export default function CodingTestPage({ params }: { params: Promise<{ seriesId:
         
         {/* Left column */}
         <div className={cn(
-          "w-[400px] flex flex-col overflow-y-auto no-scrollbar border-r transition-colors duration-500",
+          "w-[400px] flex flex-col overflow-y-auto custom-scrollbar border-r transition-colors duration-500",
           isDark ? "bg-slate-800/50 border-slate-700/50" : "bg-white border-slate-200 shadow-sm z-10"
         )}>
           <div className="p-8">
@@ -277,16 +388,22 @@ export default function CodingTestPage({ params }: { params: Promise<{ seriesId:
              "flex-1 relative transition-colors duration-500",
              isDark ? "bg-slate-900" : "bg-slate-50/50"
            )}>
-             <textarea
-               value={code}
-               onChange={(e) => setCode(e.target.value)}
-               disabled={result === 'success'}
-               spellCheck="false"
-               className={cn(
-                 "absolute inset-0 w-full h-full p-6 bg-transparent font-mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-0 disabled:opacity-50 transition-colors",
-                 isDark ? "text-slate-300" : "text-slate-800 font-medium"
-               )}
-             />
+            <div className="absolute inset-0">
+              <Editor
+                height="100%"
+                defaultLanguage="python"
+                value={code}
+                theme={isDark ? "vs-dark" : "light"}
+                onChange={(value) => setCode(value || "")}
+                options={{
+                  fontSize: 14,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  padding: { top: 20 },
+                  readOnly: result === 'success'
+                }}
+              />
+            </div>
            </div>
 
            {hint && result !== 'success' && (
@@ -345,6 +462,80 @@ export default function CodingTestPage({ params }: { params: Promise<{ seriesId:
            )}
         </div>
       </div>
-    </main>
+     </main>
+
+      {/* AI Tutor Chat Floating Window */}
+      {attempts >= 3 && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
+          {isChatOpen ? (
+            <div className={cn(
+              "w-[400px] h-[650px] max-h-[80vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border animate-in slide-in-from-bottom-8 zoom-in-95 duration-500",
+              isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"
+            )}>
+              <div className="px-6 py-4 border-b flex items-center justify-between bg-slate-50/50">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-black text-slate-800 tracking-tight">소크라테스 튜터</span>
+                </div>
+                <button onClick={() => setIsChatOpen(false)} className="text-slate-400 hover:text-slate-600">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                {chatMessages.length === 0 && (
+                  <div className="text-center py-8">
+                    <Sparkles className="h-8 w-8 text-emerald-500 mx-auto mb-2 opacity-20" />
+                    <p className="text-[11px] text-slate-400 font-medium px-4">
+                      3번의 시도 고생 많으셨어요!<br/>힌트가 필요하거나 궁금한 점이 있다면 무엇이든 물어보세요.
+                    </p>
+                  </div>
+                )}
+                {chatMessages.map((m, i) => (
+                  <div key={i} className={cn(
+                    "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs font-medium leading-relaxed",
+                    m.role === 'user' 
+                      ? "ml-auto bg-emerald-600 text-white rounded-tr-none" 
+                      : "mr-auto bg-slate-100 text-slate-700 rounded-tl-none shadow-sm"
+                  )}>
+                    {m.content}
+                  </div>
+                ))}
+                {isChatLoading && (
+                  <div className="mr-auto bg-slate-100 text-slate-400 rounded-2xl rounded-tl-none px-4 py-2 text-xs italic animate-pulse">
+                    답변을 고민 중입니다...
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleSendMessage} className="p-4 border-t bg-slate-50/50">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="튜터에게 질문하기..."
+                    className="w-full h-10 bg-white border border-slate-200 rounded-xl px-4 pr-10 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
+                  />
+                  <button 
+                    disabled={isChatLoading || !chatInput.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-600 disabled:text-slate-300 transition-colors"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <Button
+              onClick={() => setIsChatOpen(true)}
+              className="h-14 w-14 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xl shadow-emerald-500/40 p-0 flex items-center justify-center animate-bounce duration-[2000ms]"
+            >
+              <Sparkles className="h-6 w-6" />
+            </Button>
+          )}
+        </div>
+      )}
+    </>
   );
 }

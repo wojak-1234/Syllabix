@@ -26,14 +26,22 @@ model User {
   role  String   @default("STUDENT") // STUDENT, TEACHER
 
 
-  // Teacher relations
-  series      Series[] // 강사가 만든 커리큘럼
-  // Student relations
-  enrollments Enrollment[] // 학생이 Join한 커리큘럼
-  submissions Submission[] // 학생의 코딩테스트 제출
-  errorNotes  ErrorNote[] // 학생의 오답노트
+  // 선생님용 관계
+  series      Series[] 
+  
+  // 학생용 관계
+  enrollments Enrollment[] 
+  submissions Submission[] 
+  errorNotes  ErrorNote[] 
   activities  ActivityLog[]
   blindPoints BlindPoint[]
+  curriculums Curriculum[]
+
+  // [신규] 개인화 맞춤형 프로파일링 척도
+  studentLevel   String? // 수준 평가 (예: Beginner, Intermediate)
+  blunderList    String? // 고질적 실수 패턴 (JSON 형식, 예: ["IndexError", "IndentError"])
+  totalSolveTime Int     @default(0) // 누적 문제 풀이 시간 (초)
+  accuracyRate   Float   @default(0) // 전체 정답률 (0.0 ~ 1.0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,10 +83,18 @@ model Lecture {
   conceptTags       String // 핵심 개념 태그 (JSON 또는 쉼표 분리 문자열)
   content           String? // 강의 본문 / 스크립트 (RAG용)
 
+  // AI 정책 설정 필드
+  aiFocusPoints      String? // AI 집중 분야 (프롬프트 가이드)
+  minQuizCount       Int      @default(1)
+  maxQuizCount       Int      @default(3)
+  minCodingTestCount Int      @default(1)
+  maxCodingTestCount Int      @default(2)
+
   attachmentUrl     String? // 첨부파일 URL (PDF, 슬라이드)
 
-  quizzes     Quiz[]
-  codingTests CodingTest[]
+  // 동적 생성 모델로 전환하므로 정적 Quiz/CodingTest 관계 삭제
+  submissions Submission[]
+  errorNotes  ErrorNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -106,44 +122,7 @@ model Enrollment {
   @@unique([studentId, seriesId])
 }
 
-// ── Quiz (퀴즈) ── Lecture에 종속 ────────────────────────────────────
-
-model Quiz {
-  id        String  @id @default(cuid())
-  lectureId String
-  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-
-  order       Int // 퀴즈 순서
-  question    String // 문제
-  choices     String // 선택지 배열 [{ label: string, isCorrect: boolean }]
-  explanation String? // 정답 해설
-
-  conceptTag  String? // 이 문제가 평가하는 개념
-
-  createdAt DateTime @default(now())
-}
-
-// ── CodingTest (코딩테스트) ── Lecture에 종속 ────────────────────────
-
-model CodingTest {
-  id        String  @id @default(cuid())
-  lectureId String
-  lecture   Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-
-  order           Int // 코딩테스트 순서
-  title           String // 문제 제목
-  description     String // 문제 설명
-  starterCode     String? // 초기 코드 (보일러플레이트)
-  testCases       String // 입출력 예시 [{ input: string, expectedOutput: string }]
-  solutionCode    String? // 정답 코드 (채점 기준)
-
-  gradingCriteria String? // 채점 기준 설명
-  conceptTag      String? // 평가 대상 개념
-
-  submissions Submission[]
-
-  createdAt DateTime @default(now())
-}
+// ── Quiz, CodingTest 정적 테이블은 AI 실시간 생성 기반으로 전환됨 ──
 
 // ── Submission (코딩테스트 제출) ── 최대 3회 ─────────────────────────
 
@@ -151,8 +130,14 @@ model Submission {
   id           String     @id @default(cuid())
   studentId    String
   student      User       @relation(fields: [studentId], references: [id])
-  codingTestId String
-  codingTest   CodingTest @relation(fields: [codingTestId], references: [id], onDelete: Cascade)
+  
+  lectureId    String
+  lecture      Lecture    @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  // 동적 생성 문제 메타데이터
+  dynamicQuestionTitle       String?
+  dynamicQuestionDescription String?
+  solveTime                  Int?    // 푸는데 걸린 추가 시간 (초)
 
   attemptNumber Int // 시도 번호 (1, 2, 3)
   code          String // 제출한 코드 스냅샷
@@ -162,8 +147,6 @@ model Submission {
   aiHint        String? // AI가 제공한 소크라테스 힌트
 
   submittedAt DateTime @default(now())
-
-  @@unique([studentId, codingTestId, attemptNumber])
 }
 
 // ── ErrorNote (오답노트) ── 퀴즈 오답 or 코딩테스트 3회 실패 시 생성 ─
@@ -173,15 +156,15 @@ model ErrorNote {
   studentId String
   student   User   @relation(fields: [studentId], references: [id])
 
-  sourceType     String // QUIZ or CODING_TEST
-  sourceId       String // Quiz.id 또는 CodingTest.id
-  problemTitle   String // 문제명
-  errorType      String? // 에러 유형 (코딩테스트인 경우)
+  lectureId      String
+  lecture        Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  problemTitle   String // 동적 문제명
+  errorType      String? // 에러 유형
   wrongReason    String // 틀린 이유 (AI 분석)
   relatedConcept String // 관련 개념
   attemptCount   Int // 시도 횟수
   codeSnapshots  String? // 코드 스냅샷 배열 (JSON stringify)
-
 
   // 보충 학습 연결
   relatedLectureId String? // 관련 강좌 ID (RAG 검색 결과)
@@ -216,4 +199,20 @@ model BlindPoint {
   status          String   @default("DETECTED") // DETECTED, RESOLVED
   suggestedAction String? // AI의 추천 조치 (기존 강의 재수강 등)
   createdAt       DateTime @default(now())
+}
+
+// ── Curriculum (AI 제안 맞춤형 학습 마스터플랜) ──────────────────────
+model Curriculum {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    User     @relation(fields: [studentId], references: [id])
+  
+  title      String
+  totalWeeks Int
+  totalHours Int
+  phases     String   // 각 Phase의 구조화된 데이터 모음 (JSON stringify 포맷 저장)
+  aiInsight  String
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

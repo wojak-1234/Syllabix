@@ -1,24 +1,13 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Loader2, ChevronRight, Zap, AlertTriangle, BookOpen, PlayCircle, Calendar, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import {
-  Sparkles,
-  BookOpen,
-  PlayCircle,
-  Trophy,
-  ChevronRight,
-  Zap,
-  Code2,
-  AlertTriangle,
-  Star
-} from "lucide-react"
-
 // ── Mock Data ────────────────────────────────────────────────────────
 
 const MOCK_ENROLLMENTS = [
@@ -59,8 +48,38 @@ const MOCK_RECOMMENDATIONS = [
 // ── Components ───────────────────────────────────────────────────────
 
 export default function StudentDashboardPage() {
-  const [enrollments] = useState(MOCK_ENROLLMENTS)
-  const [recommendations] = useState(MOCK_RECOMMENDATIONS)
+  const [enrollments, setEnrollments] = useState<any[]>([])
+  const [curriculum, setCurriculum] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/student/dashboard')
+        if (res.ok) {
+          const data = await res.json()
+          setEnrollments(data.enrollments)
+          setCurriculum(data.curriculum)
+        }
+      } catch (e) {
+        console.error("Dashboard failed to load", e)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+      </div>
+    )
+  }
+
+  const activeIndex = enrollments.findIndex(e => e.progressRate < 100) === -1 ? enrollments.length - 1 : enrollments.findIndex(e => e.progressRate < 100)
+
 
   return (
     <main className="relative min-h-screen bg-slate-50/50 pb-20">
@@ -109,107 +128,164 @@ export default function StudentDashboardPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {enrollments.map((en) => (
-                <div key={en.id} className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-7 border border-white/60 shadow-lg hover:shadow-xl transition-all relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100/30 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-orange-200/50 transition-all" />
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <Badge className="bg-orange-50 text-orange-600 border-none px-2.5 py-0.5 rounded-full font-bold text-xs">
-                      수강 중
-                    </Badge>
-                    <span className="text-xs font-bold text-gray-400">
-                      {en.finishedLectures} / {en.totalLectures} 강좌
-                    </span>
-                  </div>
+            <div className="flex flex-col gap-4">
+              {enrollments.map((en, idx, arr) => {
+                const activeIndex = arr.findIndex(e => e.progressRate < 100) === -1 ? arr.length - 1 : arr.findIndex(e => e.progressRate < 100)
+                const isActive = idx === activeIndex
 
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
-                    {en.seriesTitle}
-                  </h3>
-                  <p className="text-sm font-medium text-gray-500 mb-6">
-                    다음 학습: <span className="text-gray-900 font-bold">{en.lastLectureTitle}</span>
-                  </p>
-
-                  <div className="space-y-2 mb-6">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-orange-500">진도율</span>
-                      <span className="text-orange-600">{en.progressRate}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-orange-400 to-amber-500 h-full rounded-full transition-all duration-1000"
-                        style={{ width: `${en.progressRate}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <Button 
-                    className="w-full h-12 rounded-xl font-bold bg-gray-900 text-white hover:bg-orange-600 transition-colors"
-                    onClick={() => window.location.href = `/learn/${en.seriesId}`}
+                return (
+                 <div 
+                    key={en.id} 
+                    className={cn(
+                      "transition-all duration-500 relative overflow-hidden group border",
+                      isActive 
+                        ? "bg-white/90 backdrop-blur-xl rounded-[2rem] p-8 shadow-xl border-orange-200/50 scale-100 opacity-100" 
+                        : "bg-slate-50/50 hover:bg-white/60 rounded-2xl p-5 shadow-sm border-transparent opacity-60 hover:opacity-80 scale-[0.98] cursor-pointer"
+                    )}
+                    onClick={() => { if (!isActive) window.location.href = `/learn/${en.seriesId}` }}
                   >
-                    이어서 학습하기 <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              ))}
+                    {isActive && (
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/10 rounded-full -mr-20 -mt-20 blur-3xl transition-all" />
+                    )}
+                    
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Badge className={cn(
+                            "border-none px-2.5 py-0.5 rounded-full font-black text-[10px] tracking-wider",
+                            isActive ? "bg-orange-500 text-white shadow-md shadow-orange-500/20" : "bg-slate-200 text-slate-500"
+                          )}>
+                            {en.progressRate === 100 ? "학습 완료" : isActive ? "현재 집중 강좌" : "대기 중"}
+                          </Badge>
+                          <span className={cn("text-xs font-bold", isActive ? "text-gray-400" : "text-gray-400")}>
+                            {en.finishedLectures} / {en.totalLectures} 강좌 완료
+                          </span>
+                        </div>
+
+                        <h3 className={cn(
+                          "font-black tracking-tight mb-1",
+                          isActive ? "text-2xl text-gray-900" : "text-lg text-gray-600"
+                        )}>
+                          {en.seriesTitle}
+                        </h3>
+                        
+                        {isActive && (
+                          <p className="text-sm font-medium text-gray-500 mb-6 mt-3">
+                            지금 바로 이어서 👉 <span className="text-gray-900 font-bold">{en.lastLectureTitle}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      <div className={cn(
+                        "w-full md:w-64 shrink-0 space-y-3",
+                        !isActive && "md:w-32"
+                      )}>
+                        <div className="flex justify-between text-xs font-black">
+                          <span className={isActive ? "text-orange-500" : "text-gray-500"}>진도율</span>
+                          <span className={isActive ? "text-orange-600" : "text-gray-600"}>{en.progressRate}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200/50 h-2.5 rounded-full overflow-hidden">
+                          <div 
+                            className={cn(
+                              "h-full rounded-full transition-all duration-1000",
+                              en.progressRate === 100 ? "bg-slate-400" : isActive ? "bg-gradient-to-r from-orange-400 to-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.3)]" : "bg-orange-300"
+                            )}
+                            style={{ width: `${en.progressRate}%` }}
+                          />
+                        </div>
+                        {isActive && (
+                          <Button 
+                            className="w-full h-12 mt-4 rounded-xl font-bold bg-gray-900 text-white hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-500/20 transition-all active:scale-95"
+                            onClick={(e) => { e.stopPropagation(); window.location.href = `/learn/${en.seriesId}` }}
+                          >
+                            이어서 학습하기 <ChevronRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
 
-        {/* AI Recommended Section */}
-        <div>
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Sparkles className="h-6 w-6 text-amber-500" /> AI 맞춤 추천 커리큘럼
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">학생님의 목표와 수준에 꼭 맞는 강좌들을 모았습니다.</p>
-            </div>
-            <Button variant="outline" className="hidden sm:flex rounded-xl font-bold border-orange-200 text-orange-600 hover:bg-orange-50">
-              다시 진단받기
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {recommendations.map(rec => (
-              <div 
-                key={rec.id} 
-                className="group bg-white/60 backdrop-blur-sm rounded-[2rem] p-7 border border-white/60 shadow-sm hover:border-orange-200 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden" 
-                onClick={() => window.location.href = `/series/${rec.id}`}
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-orange-100/20 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-orange-100/40 transition-all" />
-                
-                <div className="flex items-start justify-between mb-4">
-                  <Badge className={cn(
-                    "border-none px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider",
-                    rec.targetLevel === 'beginner' ? 'bg-emerald-100 text-emerald-600' :
-                    rec.targetLevel === 'intermediate' ? 'bg-amber-100 text-amber-600' :
-                    'bg-rose-100 text-rose-600'
-                  )}>
-                    {rec.targetLevel}
-                  </Badge>
-                  <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">
-                    <Star className="h-3 w-3 fill-amber-500" />
-                    <span className="text-[10px] font-black">{rec.rating}</span>
-                  </div>
-                </div>
-                
-                <h3 className="text-xl font-bold text-gray-900 mb-2 truncate group-hover:text-orange-600 transition-colors">
-                  {rec.title}
-                </h3>
-                <p className="text-xs text-gray-500 mb-6 line-clamp-2 leading-relaxed">
-                  {rec.description}
-                </p>
-
-                <div className="flex items-center justify-between text-xs text-gray-400 font-bold pt-4 border-t border-slate-100">
-                  <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" /> 총 {rec.lectureCount}강</span>
-                  <span className="text-orange-500 group-hover:translate-x-1 transition-transform flex items-center">
-                    상세 보기 <ChevronRight className="h-3 w-3 ml-0.5" />
-                  </span>
-                </div>
+        {/* Upcoming Curriculum Roadmap Section */}
+        {curriculum && (
+          <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Calendar className="h-6 w-6 text-emerald-500" /> 예정된 학습 로드맵
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">AI가 설계한 '{curriculum.title}'의 다음 여정입니다.</p>
               </div>
-            ))}
+              <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 px-3 py-1 font-bold">
+                진행 중인 경로
+              </Badge>
+            </div>
+
+            <div className="relative border-l-2 border-slate-200 ml-4 pl-8 space-y-10">
+              {curriculum.phases.map((phase: any, pIdx: number) => {
+                // 이 페이즈의 모든 강좌가 완료되었는지 확인 (단순 예시 로직)
+                const isCompleted = phase.linkedCourses?.every((c: any) => 
+                   enrollments.find(e => e.seriesId === c.id)?.progressRate === 100
+                )
+                const isCurrent = !isCompleted && phase.linkedCourses?.some((c: any) => 
+                   enrollments.find(e => e.seriesId === c.id)?.progressRate < 100
+                )
+
+                return (
+                  <div key={pIdx} className="relative">
+                    {/* Timeline Dot */}
+                    <div className={cn(
+                      "absolute -left-[41px] top-1 h-5 w-5 rounded-full border-4 bg-white transition-all",
+                      isCompleted ? "border-emerald-500 bg-emerald-500" :
+                      isCurrent ? "border-orange-500 scale-125 shadow-[0_0_10px_rgba(249,115,22,0.5)]" :
+                      "border-slate-200"
+                    )} />
+                    
+                    <div className={cn(
+                      "transition-all",
+                      !isCurrent && !isCompleted && "opacity-50"
+                    )}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Phase {phase.phaseNumber}</span>
+                        <span className="text-xs font-bold text-slate-300">•</span>
+                        <span className="text-xs font-bold text-slate-400">{phase.weekRange}</span>
+                      </div>
+                      <h4 className="text-lg font-black text-gray-900 mb-4">{phase.title}</h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                         {phase.linkedCourses?.map((course: any, cIdx: number) => {
+                            const en = enrollments.find(e => e.seriesId === course.id)
+                            return (
+                              <div key={cIdx} className="flex items-center justify-between p-4 rounded-xl bg-white border border-slate-100 shadow-sm group hover:border-emerald-200 transition-all">
+                                 <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center">
+                                       <BookOpen className="h-4 w-4 text-slate-400" />
+                                    </div>
+                                    <div>
+                                       <p className="text-sm font-bold text-gray-800 line-clamp-1">{course.title}</p>
+                                       <p className="text-[10px] font-medium text-gray-400">{en ? `진도율 ${en.progressRate}%` : '학습 예정'}</p>
+                                    </div>
+                                 </div>
+                                 {en?.progressRate === 100 ? (
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                 ) : (
+                                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                                 )}
+                              </div>
+                            )
+                         })}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
       <Footer />

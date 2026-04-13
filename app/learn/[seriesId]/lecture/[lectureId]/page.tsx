@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, use } from "react"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
@@ -14,7 +16,8 @@ import {
   Code2,
   CheckCircle2,
   XCircle,
-  Lightbulb
+  Lightbulb,
+  AlertTriangle
 } from "lucide-react"
 
 // ── Mock Data ────────────────────────────────────────────────────────
@@ -186,18 +189,50 @@ export default function LectureLearnPage({ params }: { params: Promise<{ seriesI
               <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-tight mb-4">
                 {lecture.title}
               </h1>
-              <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-start gap-3">
+              <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-start gap-3 mb-4">
                 <Lightbulb className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">학습 목표</p>
                   <p className="text-sm font-medium text-gray-700">{lecture.learningObjective}</p>
                 </div>
               </div>
+
+              {/* Demo Notice */}
+              <div className="bg-orange-50 border border-orange-200 p-4 rounded-2xl flex items-start gap-3 shadow-sm ring-1 ring-orange-100">
+                <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-orange-900">안내: 이것은 데모(Demo) 강좌입니다</p>
+                  <p className="text-xs font-medium text-orange-700 mt-1 leading-relaxed">
+                    실제 서비스에서는 강사가 본문과 목표를 입력하면 **AI가 이를 분석하여 맞춤형 퀴즈와 코딩테스트를 자동으로 생성**합니다. 현재 보시는 화면은 시스템 동작 방식을 보여드리기 위한 예시 데이터입니다.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Content Area (Dynamic) */}
-            <div className="prose prose-slate prose-orange max-w-none whitespace-pre-wrap font-medium text-gray-700 leading-relaxed">
-               {lecture.content}
+            {/* Content Area (Markdown) */}
+            <div className="prose prose-slate prose-orange max-w-none font-medium text-gray-700 leading-relaxed">
+               <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  pre: ({ node, ...props }) => (
+                    <div className="relative group my-8">
+                       <div className="absolute -left-12 top-4 hidden md:flex flex-col items-center gap-1 opacity-20 group-hover:opacity-40 transition-opacity">
+                         <span className="text-[10px] font-black text-blue-600">In [ ]:</span>
+                       </div>
+                       <pre {...props} className="bg-slate-50 border border-slate-200 rounded-xl p-6 overflow-x-auto shadow-inner text-sm font-mono text-gray-800" />
+                    </div>
+                  ),
+                  code: ({ node, ...props }) => (
+                    <code {...props} className="bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded font-bold" />
+                  ),
+                  h1: ({ node, ...props }) => <h1 {...props} className="text-3xl font-black text-gray-900 mt-12 mb-6" />,
+                  h2: ({ node, ...props }) => <h2 {...props} className="text-2xl font-bold text-gray-900 mt-10 mb-4" />,
+                  h3: ({ node, ...props }) => <h3 {...props} className="text-xl font-bold text-gray-800 mt-8 mb-3" />,
+                  li: ({ node, ...props }) => <li {...props} className="mb-2" />,
+                }}
+               >
+                {lecture.content}
+               </ReactMarkdown>
             </div>
           </div>
         </div>

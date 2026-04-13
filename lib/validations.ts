@@ -27,6 +27,11 @@ export const createLectureSchema = z.object({
   conceptTags: z.array(z.string()).min(1),
   content: z.string().max(50000).optional(),
   attachmentUrl: z.string().url().optional(),
+  aiFocusPoints: z.string().optional(),
+  minQuizCount: z.number().int().min(0).optional(),
+  maxQuizCount: z.number().int().min(0).optional(),
+  minCodingTestCount: z.number().int().min(0).optional(),
+  maxCodingTestCount: z.number().int().min(0).optional(),
 })
 
 export const updateLectureSchema = createLectureSchema

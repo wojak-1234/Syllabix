@@ -97,7 +97,7 @@ export default function OnboardingPage() {
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(false)
 
-  const progress = questions.length > 0 ? ((currentQuestionIdx + 1) / questions.length) * 100 : 0
+  const progress = (questions && questions.length > 0) ? ((currentQuestionIdx + 1) / questions.length) * 100 : 0
 
   useEffect(() => {
     const rawContext = sessionStorage.getItem('chatContext')
@@ -118,7 +118,7 @@ export default function OnboardingPage() {
         body: JSON.stringify({ action: 'generate', chatContext: context })
       })
       const data = await res.json()
-      setQuestions(data.questions)
+      setQuestions(data.questions || [])
       setStep('quiz')
     } catch (error) {
       console.error(error)
@@ -136,7 +136,7 @@ export default function OnboardingPage() {
         body: JSON.stringify({ action: 'generate', goal })
       })
       const data = await res.json()
-      setQuestions(data.questions)
+      setQuestions(data.questions || [])
       setStep('quiz')
     } catch (error) {
       console.error(error)
@@ -241,7 +241,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {step === 'quiz' && (
+        {step === 'quiz' && questions.length > 0 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Progress Bar */}
             <div className="space-y-2">
@@ -258,79 +258,93 @@ export default function OnboardingPage() {
             </div>
 
             {/* Question Card */}
-            <Card className="p-8 bg-white/80 backdrop-blur-xl border-white/60 shadow-2xl rounded-[2rem] min-h-[400px] flex flex-col">
-              <div className="mb-8">
-                <span className="text-xs font-bold text-orange-500 mb-2 block uppercase tracking-widest">
-                  Question {questions[currentQuestionIdx].id}
-                </span>
-                <h2 className="text-xl font-bold text-gray-900 whitespace-pre-wrap leading-tight">
-                  {questions[currentQuestionIdx].question}
-                </h2>
-                <p className="text-sm text-gray-400 mt-2">
-                  {questions[currentQuestionIdx].description}
-                </p>
-              </div>
+            {(() => {
+              const currentQ = questions[currentQuestionIdx];
+              if (!currentQ) return null;
 
-              <div className="space-y-3 flex-1">
-                {questions[currentQuestionIdx].options.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSelectOption(option.value)}
-                    className={cn(
-                      "w-full p-4 text-left rounded-2xl border-2 transition-all duration-200 group flex items-center justify-between",
-                      answers[questions[currentQuestionIdx].id] === option.value
-                        ? "bg-orange-50 border-orange-500 text-orange-700 shadow-md"
-                        : "bg-white border-gray-100 placeholder-slate-400 hover:border-orange-200 hover:bg-orange-50/30 text-gray-600"
+              return (
+                <Card className="p-8 bg-white/80 backdrop-blur-xl border-white/60 shadow-2xl rounded-[2rem] min-h-[400px] flex flex-col">
+                  <div className="mb-8">
+                    <span className="text-xs font-bold text-orange-500 mb-2 block uppercase tracking-widest">
+                      Question {currentQ.id}
+                    </span>
+                    <h2 className="text-xl font-bold text-gray-900 whitespace-pre-wrap leading-tight">
+                      {currentQ.question}
+                    </h2>
+                    <p className="text-sm text-gray-400 mt-2">
+                      {currentQ.description}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 flex-1">
+                    {(currentQ.options || []).map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => handleSelectOption(option.value)}
+                        className={cn(
+                          "w-full p-4 text-left rounded-2xl border-2 transition-all duration-200 group flex items-center justify-between",
+                          answers[currentQ.id] === option.value
+                            ? "bg-orange-50 border-orange-500 text-orange-700 shadow-md"
+                            : "bg-white border-gray-100 placeholder-slate-400 hover:border-orange-200 hover:bg-orange-50/30 text-gray-600"
+                        )}
+                      >
+                        <span className="font-medium text-sm">{option.label}</span>
+                        <div className={cn(
+                          "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
+                          answers[currentQ.id] === option.value
+                            ? "border-orange-500 bg-orange-500"
+                            : "border-gray-200 group-hover:border-orange-300"
+                        )}>
+                          {answers[currentQ.id] === option.value && (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="mt-8 flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      disabled={currentQuestionIdx === 0}
+                      onClick={() => setCurrentQuestionIdx(prev => prev - 1)}
+                      className="text-gray-400 rounded-xl"
+                    >
+                      이전으로
+                    </Button>
+                    
+                    {currentQuestionIdx === questions.length - 1 ? (
+                      <Button 
+                        disabled={!answers[currentQ.id] || loading}
+                        onClick={handleSubmit}
+                        className="rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-bold px-8 shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
+                      >
+                        {loading ? "분석 중..." : "진단 완료하기"}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        disabled={!answers[currentQ.id]}
+                        onClick={() => setCurrentQuestionIdx(prev => prev + 1)}
+                        className="rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 active:scale-95 transition-all"
+                      >
+                        다음
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
                     )}
-                  >
-                    <span className="font-medium text-sm">{option.label}</span>
-                    <div className={cn(
-                      "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
-                      answers[questions[currentQuestionIdx].id] === option.value
-                        ? "border-orange-500 bg-orange-500"
-                        : "border-gray-200 group-hover:border-orange-300"
-                    )}>
-                      {answers[questions[currentQuestionIdx].id] === option.value && (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Navigation */}
-              <div className="mt-8 flex items-center justify-between">
-                <Button
-                  variant="ghost"
-                  disabled={currentQuestionIdx === 0}
-                  onClick={() => setCurrentQuestionIdx(prev => prev - 1)}
-                  className="text-gray-400 rounded-xl"
-                >
-                  이전으로
-                </Button>
-                
-                {currentQuestionIdx === questions.length - 1 ? (
-                  <Button 
-                    disabled={!answers[questions[currentQuestionIdx].id] || loading}
-                    onClick={handleSubmit}
-                    className="rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-bold px-8 shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
-                  >
-                    {loading ? "분석 중..." : "진단 완료하기"}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                    disabled={!answers[questions[currentQuestionIdx].id]}
-                    onClick={() => setCurrentQuestionIdx(prev => prev + 1)}
-                    className="rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 active:scale-95 transition-all"
-                  >
-                    다음
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </Card>
+                  </div>
+                </Card>
+              )
+            })()}
           </div>
+        )}
+
+        {step === 'quiz' && questions.length === 0 && (
+           <div className="text-center py-20 bg-white/60 rounded-[2rem] border border-dashed border-gray-200">
+             <p className="text-gray-400 font-bold">문제를 생성하지 못했습니다. 다시 시도해주세요.</p>
+             <Button onClick={() => setStep('goal')} variant="outline" className="mt-4 rounded-xl">목표 재설정</Button>
+           </div>
         )}
 
         {step === 'done' && (

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getGeminiModel } from '@/lib/gemini'
+import { prisma } from '@/lib/prisma'
+import { getGeminiModel, MODELS } from '@/lib/gemini'
 
 const phaseSchema = {
   type: "object",
@@ -44,12 +45,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Goal is required" }, { status: 400 })
     }
 
-    // Mock Database functionality
-    const availableCourses = [
-      { id: "c1", title: "React 입문", tags: ["React", "Frontend"], difficulty: "Beginner" },
-      { id: "c2", title: "Node.js 실전", tags: ["Node.js", "Backend"], difficulty: "Intermediate" },
-      { id: "c3", title: "TypeScript 마스터", tags: ["TypeScript"], difficulty: "Advanced" }
-    ]
+    // 실제 DB에서 공개된(PUBLISHED) 커리큘럼(Series) 목록 가져오기
+    const realSeries = await prisma.series.findMany({
+      where: { status: 'PUBLISHED' },
+      select: {
+        id: true,
+        title: true,
+        targetLevel: true,
+        goal: true,
+        description: true,
+      }
+    })
+
+    const availableCourses = realSeries.map(s => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      difficulty: s.targetLevel,
+      goal: s.goal
+    }))
 
     const systemPrompt = `당신은 전 세계의 학습 데이터를 분석하여 최적의 학습 경로를 설계하는 'Syllabix 수석 교육 설계자(Senior Learning Architect)'입니다. 
 당신의 목표는 단순한 일정표 작성이 아니라, 학습자의 인지적 과부하를 방지하고 동기를 극대화하는 '전략적 마스터플랜'을 수립하는 것입니다.
@@ -86,18 +100,70 @@ export async function POST(req: NextRequest) {
 
     const response = await result.response
     const responseText = response.text()
-    console.log("[Curriculum API] Gemini Response Received")
+    const curriculum = JSON.parse(responseText)
+    
+    // ── AI 강좌 매칭 로직 (토큰 효율화: 생성 시 1회만 수행) ──
+    const publishedSeries = await prisma.series.findMany({
+      where: { status: 'PUBLISHED' },
+      include: { 
+        teacher: true,
+        _count: { select: { lectures: true } }
+      }
+    })
 
-    if (!responseText) {
-      throw new Error("No response generated from Gemini")
+    const matchingModel = getGeminiModel({ temperature: 0.1 }, MODELS.LITE)
+    const matchingPrompt = `
+[SYSTEM: Course Matcher]
+사용자가 요청한 커리큘럼의 단계별 목표에 가장 잘 어울리는 실제 강좌를 매칭하세요.
+
+[요청된 커리큘럼 단계별 목표]
+${curriculum.phases.map((p: any, i: number) => `Phase ${i+1}: ${p.title} - ${p.topics.join(', ')}`).join('\n')}
+
+[DB 내 사용 가능한 실제 강좌 목록]
+${publishedSeries.map(s => `ID: ${s.id}, 제목: ${s.title}, 설명: ${s.description}`).join('\n')}
+
+[요구사항]
+- 각 Phase별로 가장 연관성이 높은 강좌를 최대 2개씩 골라 JSON 배열로 반환하세요.
+- 결과 형식: [[ID1, ID2], [ID3], [ID4, ID5]] (커리큘럼 단계 순서대로)
+- 오직 JSON 형식의 중첩 배열만 응답하세요.
+`
+    let matchedIds = []
+    try {
+      const resp = await matchingModel.generateContent(matchingPrompt)
+      matchedIds = JSON.parse(resp.response.text().replace(/```json|```/g, "").trim())
+    } catch (e) {
+      console.warn("AI Matching failed, fallback to sequential slice.", e)
+      matchedIds = curriculum.phases.map((_: any, i: number) => [publishedSeries[i % publishedSeries.length]?.id].filter(Boolean))
     }
 
-    const curriculum = JSON.parse(responseText)
+    const phasesWithCourses = curriculum.phases.map((phase: any, index: number) => {
+      const idsForThisPhase = matchedIds[index] || []
+      const linkedCourses = publishedSeries
+        .filter(s => idsForThisPhase.includes(s.id))
+        .map(s => ({
+          id: s.id,
+          title: s.title,
+          instructor: s.teacher?.name || 'Syllabix 강사',
+          description: s.description,
+          lectureCount: s._count.lectures
+        }))
 
-    // DB 저장 진행 (Mock)
-    let savedId = `curri-${Date.now()}`
+      return { ...phase, linkedCourses }
+    })
 
-    return NextResponse.json({ curriculum, curriculumId: savedId })
+    // 최종 결과물 DB 저장 (user-1에 매핑)
+    const savedRecord = await prisma.curriculum.create({
+      data: {
+        studentId: 'user-1', 
+        title: curriculum.title,
+        totalWeeks: curriculum.totalWeeks,
+        totalHours: curriculum.totalHours,
+        phases: JSON.stringify(phasesWithCourses), // 매칭된 강좌 정보가 포함된 상태로 저장
+        aiInsight: curriculum.aiInsight
+      }
+    })
+
+    return NextResponse.json({ curriculum: { ...curriculum, phases: phasesWithCourses }, curriculumId: savedRecord.id })
 
   } catch (error: any) {
     console.error("[Curriculum API] Error:", error)

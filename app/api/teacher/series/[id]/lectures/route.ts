@@ -18,9 +18,6 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     const lectures = await prisma.lecture.findMany({
       where: { seriesId },
       orderBy: { order: 'asc' },
-      include: {
-        _count: { select: { quizzes: true, codingTests: true } },
-      },
     })
 
     return NextResponse.json({ data: lectures })

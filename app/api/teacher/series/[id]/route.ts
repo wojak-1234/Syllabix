@@ -20,10 +20,6 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       include: {
         lectures: {
           orderBy: { order: 'asc' },
-          include: {
-            quizzes: { select: { id: true, question: true, order: true } },
-            codingTests: { select: { id: true, title: true, order: true } },
-          },
         },
         _count: { select: { enrollments: true } },
       },

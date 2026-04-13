@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, useRef } from "react"
+import { useState, useEffect, Suspense, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -82,38 +82,71 @@ const MOCK_ANALYTICS: Record<string, any> = {
 
 function AnalyticsContent() {
   const searchParams = useSearchParams()
-  const initialId = searchParams.get('seriesId') || "1"
-  
-  const [selectedId, setSelectedId] = useState(initialId)
+  const [seriesList, setSeriesList] = useState<any[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [isAdding, setIsAdding] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [realBlindPoints, setRealBlindPoints] = useState<any[] | null>(null)
 
-  // 드롭다운 닫힘 지연 방지용 (UX 개선)
+  // 1. 실데이터 기반 시리즈 목록 로드
+  useEffect(() => {
+     const fetchSeries = async () => {
+        try {
+           const res = await fetch('/api/teacher/series?teacherId=teacher-1')
+           if (res.ok) {
+              const { data } = await res.json()
+              setSeriesList(data)
+              // URL에 seriesId가 있으면 그것을, 없으면 첫 번째 시리즈를 기본 선택
+              const targetId = searchParams.get('seriesId') || (data.length > 0 ? data[0].id : null)
+              setSelectedId(targetId)
+           }
+        } catch (e) {
+           console.error("Failed to load real series list", e)
+        }
+     }
+     fetchSeries()
+  }, [])
+
+  const currentSeries = seriesList.find(s => s.id === selectedId) || (seriesList.length > 0 ? seriesList[0] : null)
+
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
   const handleMouseEnter = () => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
     setIsDropdownOpen(true)
   }
-
   const handleMouseLeave = () => {
     closeTimeoutRef.current = setTimeout(() => {
       setIsDropdownOpen(false)
-    }, 300) // 300ms 지연 후 닫힘
+    }, 300)
   }
-
-  const data = MOCK_ANALYTICS[selectedId] || MOCK_ANALYTICS["1"]
 
   const handleRunAgent = async () => {
     setIsAnalyzing(true)
-    setTimeout(() => {
-      setIsAnalyzing(false)
-      setSuccess("전문 LangChain 에이전트(GPT-4o 기반) 분석 시뮬레이션이 완료되었습니다.")
+    try {
+      const res = await fetch('/api/teacher/analytics/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seriesId: selectedId })
+      })
+
+      if (!res.ok) throw new Error("분석에 실패했습니다.")
+      const { blindPoints } = await res.json()
+      
+      setRealBlindPoints(blindPoints)
+      setSuccess("AI 에이전트가 실제 DB 데이터를 전행 분석하여 취약점을 도출했습니다.")
       setTimeout(() => setSuccess(null), 4000)
-    }, 2800)
+    } catch (err: any) {
+      console.error(err)
+      alert("분석 중 오류 발생: " + err.message)
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
+
+  const data = (selectedId && MOCK_ANALYTICS[selectedId]) || MOCK_ANALYTICS["1"]
+  // 실제 분석 데이터가 있다면 그것을 우선 사용
+  const displayBlindPoints = realBlindPoints || data.blindPoints;
 
   const handleDetailedFeedback = async (bpId: string) => {
     // 향후 실제 AI 상세 리포트 생성 로직 자리
@@ -142,6 +175,12 @@ function AnalyticsContent() {
              </button>
              <span className="text-gray-300 text-xs">/</span>
              <span className="text-xs font-bold text-emerald-600">통합 분석 리포트</span>
+             <div className="relative group ml-1">
+               <button onClick={() => alert('실제 동작: \n1. 학생들의 수강(Enrollment) 기록과 각 강좌별 풀이 점수를 평균 냅니다.\n2. 누적된 오답(Blind Points) 리스트를 AI 에이전트가 훑고 RAG로 강의 자료와 연계하여 지도 조언을 생성합니다.\n(현재는 심사용 임시 가상 데이터 기반입니다)')} className="p-1 rounded-full bg-slate-200 text-slate-500 hover:bg-emerald-100 hover:text-emerald-600 transition-colors cursor-pointer">
+                 <AlertTriangle className="h-3 w-3" />
+               </button>
+             </div>
+             <span className="text-[10px] text-amber-500 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">데모 데이터(임시)</span>
           </div>
           
           <div 
@@ -150,16 +189,18 @@ function AnalyticsContent() {
             onMouseLeave={handleMouseLeave}
           >
             <button className="text-3xl font-black text-gray-900 flex items-center gap-2 hover:text-emerald-600 transition-colors py-1">
-              {data.seriesTitle}
+              {currentSeries?.title || "강좌 선택"}
               <ChevronDown className={cn("h-6 w-6 text-gray-300 transition-transform duration-300", isDropdownOpen && "rotate-180")} />
             </button>
             {isDropdownOpen && (
               <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-slate-100 shadow-2xl rounded-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                {MOCK_SERIES_LIST.map(s => (
+                {seriesList.length === 0 && <p className="p-3 text-xs text-gray-400">등록된 강좌가 없습니다.</p>}
+                {seriesList.map((s: any) => (
                   <button 
                     key={s.id}
                     onClick={() => {
                       setSelectedId(s.id)
+                      setRealBlindPoints(null) // 시리즈 변경 시 분석 결과 초기화
                       setIsDropdownOpen(false)
                     }}
                     className={cn(
@@ -187,86 +228,109 @@ function AnalyticsContent() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
          <div className="md:col-span-2 space-y-6">
-            <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
+            <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
               <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <TrendingDown className="h-5 w-5 text-rose-500" /> 강좌별 이해도
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {data.heatmap.map((lec: any) => (
-                  <div key={lec.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 relative group overflow-hidden">
-                     <div className={cn(
-                        "absolute inset-0 opacity-10 transition-opacity group-hover:opacity-20",
-                        lec.score > 80 ? "bg-emerald-500" : lec.score > 60 ? "bg-amber-500" : "bg-rose-500"
-                     )} />
-                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{lec.title}</p>
-                     <p className={cn("text-xl font-black", lec.score > 80 ? "text-emerald-600" : lec.score > 60 ? "text-amber-600" : "text-rose-600")}>
-                       {lec.score}%
-                     </p>
+              
+              {!MOCK_ANALYTICS[selectedId || ""] ? (
+                <div className="py-20 text-center relative z-10">
+                  <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertTriangle className="h-8 w-8 text-slate-300" />
                   </div>
-                ))}
-              </div>
+                  <p className="text-gray-500 font-bold text-lg">데이터가 존재하지 않습니다.</p>
+                  <p className="text-gray-400 text-sm mt-1">이는 테스트 데이터입니다. 🤖</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {MOCK_ANALYTICS[selectedId || ""].heatmap.map((lec: any) => (
+                    <div key={lec.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 relative group overflow-hidden">
+                       <div className={cn(
+                          "absolute inset-0 opacity-10 transition-opacity group-hover:opacity-20",
+                          lec.score > 80 ? "bg-emerald-500" : lec.score > 60 ? "bg-amber-500" : "bg-rose-500"
+                       )} />
+                       <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{lec.title}</p>
+                       <p className={cn("text-xl font-black", lec.score > 80 ? "text-emerald-600" : lec.score > 60 ? "text-amber-600" : "text-rose-600")}>
+                         {lec.score}%
+                       </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 px-2">
                 <MessageSquareWarning className="h-5 w-5 text-amber-500" /> 발견된 Blind Points
+                <Badge variant="outline" className="ml-auto text-[10px] border-emerald-200 text-emerald-600 bg-emerald-50">
+                  {realBlindPoints ? "AI 실시간 분석 결과" : "분석 전 가이드 데이터"}
+                </Badge>
               </h3>
-              {data.blindPoints.map((bp: any) => (
-                <div key={bp.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl p-8 relative overflow-hidden group">
-                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
-                   <div className="flex flex-col gap-6">
-                      <div className="flex flex-col md:flex-row justify-between gap-4">
-                        <div>
-                          <Badge className="bg-amber-50 text-amber-600 border-none mb-2">{bp.lectureTitle}</Badge>
-                          <h4 className="text-2xl font-black text-gray-900 leading-tight">{bp.concept}</h4>
-                        </div>
-                        <div className="text-right">
-                           <div className="inline-block p-3 rounded-2xl bg-rose-50 border border-rose-100 text-center min-w-[80px]">
-                             <p className="text-[10px] font-bold text-rose-400 uppercase">실패율</p>
-                             <p className="text-lg font-black text-rose-600">{bp.failRate}%</p>
-                           </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div>
-                          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            <AlertTriangle className="h-3 w-3" /> 학생들이 어려워하는 핵심 원인
-                          </h5>
-                          <ul className="space-y-2">
-                             {bp.studentDifficulties.map((diff: string, i: number) => (
-                               <li key={i} className="text-sm text-gray-600 font-medium flex items-start gap-2">
-                                 <span className="mt-1 h-1 w-1 rounded-full bg-rose-300 shrink-0" />
-                                 {diff}
-                               </li>
-                             ))}
-                          </ul>
-                        </div>
-
-                        <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100">
-                          <h5 className="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2">
-                            <BrainCircuit className="h-4 w-4" /> AI 원인 분석 및 교수법 제안
-                          </h5>
-                          <p className="text-sm text-gray-700 leading-relaxed font-medium italic">
-                            "{bp.aiDeepFeedback}"
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                         <p className="text-[11px] text-gray-400 flex items-center gap-1.5 font-medium">
-                           <Search className="h-3 w-3" /> {bp.ragAnchor}
-                         </p>
-                         <Button 
-                           onClick={() => handleDetailedFeedback(bp.id)}
-                           className="bg-gray-900 hover:bg-black text-white rounded-xl font-bold h-10 px-6 shadow-md transition-all active:scale-95"
-                         >
-                           상세 피드백 리포트 생성
-                         </Button>
-                      </div>
-                   </div>
+              
+              {!MOCK_ANALYTICS[selectedId || ""] && !realBlindPoints ? (
+                <div className="bg-white rounded-[2rem] border border-dashed border-slate-200 p-16 text-center">
+                  <p className="text-gray-400 font-bold">분석 결과가 아직 없습니다.</p>
+                  <p className="text-xs text-gray-300 mt-1">상단의 'AI 취약점 정밀 분석' 버튼을 눌러보세요.</p>
                 </div>
-              ))}
+              ) : (
+                (realBlindPoints || MOCK_ANALYTICS[selectedId || ""].blindPoints).map((bp: any) => (
+                  <div key={bp.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl p-8 relative overflow-hidden group">
+                    {/* ... (기존과 동일한 블라인드 포인트 렌더링 로직) */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col md:flex-row justify-between gap-4">
+                          <div>
+                            <Badge className="bg-amber-50 text-amber-600 border-none mb-2">{bp.lectureTitle}</Badge>
+                            <h4 className="text-2xl font-black text-gray-900 leading-tight">{bp.concept}</h4>
+                          </div>
+                          <div className="text-right">
+                             <div className="inline-block p-3 rounded-2xl bg-rose-50 border border-rose-100 text-center min-w-[80px]">
+                               <p className="text-[10px] font-bold text-rose-400 uppercase">실패율</p>
+                               <p className="text-lg font-black text-rose-600">{bp.failRate}%</p>
+                             </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                              <AlertTriangle className="h-3 w-3" /> 학생들이 어려워하는 핵심 원인
+                            </h5>
+                            <ul className="space-y-2">
+                               {bp.studentDifficulties.map((diff: string, i: number) => (
+                                 <li key={i} className="text-sm text-gray-600 font-medium flex items-start gap-2">
+                                   <span className="mt-1 h-1 w-1 rounded-full bg-rose-300 shrink-0" />
+                                   {diff}
+                                 </li>
+                               ))}
+                            </ul>
+                          </div>
+
+                          <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100">
+                            <h5 className="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2">
+                              <BrainCircuit className="h-4 w-4" /> AI 원인 분석 및 교수법 제안
+                            </h5>
+                            <p className="text-sm text-gray-700 leading-relaxed font-medium italic">
+                              "{bp.aiDeepFeedback}"
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                           <p className="text-[11px] text-gray-400 flex items-center gap-1.5 font-medium">
+                             <Search className="h-3 w-3" /> {bp.ragAnchor}
+                           </p>
+                           <Button 
+                             onClick={() => handleDetailedFeedback(bp.id)}
+                             className="bg-gray-900 hover:bg-black text-white rounded-xl font-bold h-10 px-6 shadow-md transition-all active:scale-95"
+                           >
+                             상세 피드백 리포트 생성
+                           </Button>
+                        </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
          </div>
 
@@ -278,17 +342,14 @@ function AnalyticsContent() {
               <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-6">운영 인사이트</h4>
               <div className="space-y-6 relative">
                  <div>
-                   <p className="text-3xl font-black text-white mb-1">{data.stats.totalStudents}명</p>
+                   <p className="text-3xl font-black text-white mb-1">{MOCK_ANALYTICS[selectedId || ""]?.stats.totalStudents || 0}명</p>
                    <p className="text-xs text-gray-400">현재 학습 중인 수강생</p>
                  </div>
                  <div className="h-px bg-white/10 w-full" />
                  <div>
-                   <p className="text-3xl font-black text-emerald-400 mb-1">{data.stats.avgProgress}%</p>
+                   <p className="text-3xl font-black text-emerald-400 mb-1">{MOCK_ANALYTICS[selectedId || ""]?.stats.avgProgress || 0}%</p>
                    <p className="text-xs text-gray-400">평균 학습 완주율</p>
                  </div>
-                 <Button className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/20 border-none text-white font-bold mt-4">
-                   상세 데이터 분석 <ArrowUpRight className="h-4 w-4 ml-2" />
-                 </Button>
               </div>
             </div>
 

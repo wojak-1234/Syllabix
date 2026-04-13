@@ -1,40 +1,47 @@
 'use client'
 
-import { useState, use } from "react"
+import { useState, use, useEffect } from "react"
+import Link from "next/link"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Loader2, PlayCircle, BookOpen, CheckCircle2, Lock, ChevronRight, ChevronLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
-import {
-  PlayCircle,
-  BookOpen,
-  CheckCircle2,
-  Lock,
-  ChevronRight,
-  ChevronLeft
-} from "lucide-react"
-
-// ── Mock Data ────────────────────────────────────────────────────────
-
-const MOCK_ENROLLMENT_DETAIL = {
-  seriesId: "s1",
-  seriesTitle: "파이썬 데이터 분석 마스터",
-  description: "파이썬 기초부터 실무 데이터 분석까지 완벽하게 마스터합니다.",
-  progressRate: 45,
-  lectures: [
-    { id: "l1", title: "파이썬 환경 설정", isCompleted: true, type: "video" },
-    { id: "l2", title: "자료형과 변수", isCompleted: true, type: "quiz" },
-    { id: "l3", title: "Pandas 기초 다지기", isCompleted: false, type: "code", isCurrent: true },
-    { id: "s1", title: "[보충] 데이터 프레임 합치기", isCompleted: false, type: "video", isSupplemental: true },
-    { id: "l4", title: "데이터 시각화", isCompleted: false, type: "video" },
-  ]
-}
 
 export default function SeriesLearnPage({ params }: { params: Promise<{ seriesId: string }> }) {
   const resolvedParams = use(params)
-  const [detail] = useState(MOCK_ENROLLMENT_DETAIL)
+  const [detail, setDetail] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const res = await fetch(`/api/student/enrollment/${resolvedParams.seriesId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setDetail(data)
+        }
+      } catch (e) {
+        console.error("Failed to load series detail", e)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchDetail()
+  }, [resolvedParams.seriesId])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+      </div>
+    )
+  }
+
+  if (!detail) return <div className="p-20 text-center">강좌 정보를 찾을 수 없습니다.</div>
+
 
   return (
     <main className="relative min-h-screen bg-slate-50/50 pb-20">
@@ -43,12 +50,12 @@ export default function SeriesLearnPage({ params }: { params: Promise<{ seriesId
 
       <div className="relative z-10 container mx-auto px-4 pt-28 max-w-4xl">
         {/* Back */}
-        <button
-          onClick={() => window.location.href = '/dashboard'}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-orange-600 font-medium mb-6 transition-colors"
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-orange-600 font-bold mb-6 transition-colors relative z-20 cursor-pointer"
         >
           <ChevronLeft className="h-4 w-4" /> 대시보드로 돌아가기
-        </button>
+        </Link>
 
         {/* Header Summary */}
         <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/60 shadow-xl mb-10 overflow-hidden relative">

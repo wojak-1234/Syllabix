@@ -144,16 +144,6 @@ function SeriesCard({ series, onClick }: { series: SeriesSummary; onClick: () =>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button 
-             variant="outline" 
-             className="h-8 rounded-lg text-xs font-bold border-emerald-100 text-emerald-600 hover:bg-emerald-50"
-             onClick={(e) => {
-               e.stopPropagation();
-               window.location.href=`/teacher/analytics?seriesId=${series.id}`;
-             }}
-          >
-            <BarChart3 className="h-3 w-3 mr-1.5" /> 분석 리포트
-          </Button>
           <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
         </div>
       </div>
@@ -167,15 +157,15 @@ function CreateSeriesCard({ onClick }: { onClick: () => void }) {
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer border-2 border-dashed border-gray-200 hover:border-emerald-300 rounded-[2rem] p-7 flex flex-col items-center justify-center text-center min-h-[200px] transition-all duration-300 hover:bg-emerald-50/30"
+      className="group cursor-pointer border-2 border-dashed border-emerald-200 bg-emerald-50/10 hover:border-emerald-500 rounded-[2.5rem] p-7 flex flex-col items-center justify-center text-center min-h-[200px] transition-all duration-300 hover:bg-emerald-50 hover:shadow-xl hover:shadow-emerald-500/5 shadow-sm"
     >
-      <div className="h-14 w-14 rounded-2xl bg-gray-100 group-hover:bg-emerald-100 flex items-center justify-center mb-4 transition-colors">
-        <Plus className="h-7 w-7 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+      <div className="h-16 w-16 rounded-[1.5rem] bg-emerald-100 group-hover:bg-emerald-600 flex items-center justify-center mb-5 transition-all duration-500 shadow-sm group-hover:scale-110 group-hover:rotate-6">
+        <Plus className="h-8 w-8 text-emerald-600 group-hover:text-white transition-colors" />
       </div>
-      <p className="font-bold text-gray-500 group-hover:text-emerald-700 transition-colors">
+      <p className="font-black text-gray-900 group-hover:text-emerald-700 transition-colors text-lg tracking-tight">
         새 커리큘럼 만들기
       </p>
-      <p className="text-xs text-gray-400 mt-1">AI가 구성을 도와드립니다</p>
+      <p className="text-xs font-bold text-emerald-600/60 mt-1 uppercase tracking-widest">AI Assistance Ready</p>
     </div>
   )
 }
@@ -376,6 +366,13 @@ export default function TeacherDashboardPage() {
         </div>
 
         {/* Quick Stats */}
+        <div className="flex items-center gap-3 mt-12 mb-4">
+          <h2 className="text-xl font-black text-gray-900 tracking-tight">요약 통계</h2>
+          <button onClick={() => alert('실제 동작: \n총 수강생 등의 수치는 DB의 Enrollment 테이블 값과 실제 User 진척도를 Aggregate하여 계산하게 됩니다. (현재 디자인 리뷰용으로 일부 가상 데이터가 포함되어 있습니다.)')} className="p-1 rounded-full bg-slate-200 text-slate-500 hover:bg-emerald-100 hover:text-emerald-600 transition-colors cursor-pointer">
+            <span title="도움말">❓</span>
+          </button>
+          <span className="text-[10px] text-amber-500 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">데모(임시)</span>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-white/60 shadow-lg">
             <div className="flex items-center gap-3 mb-3">

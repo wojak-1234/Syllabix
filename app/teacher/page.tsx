@@ -259,8 +259,7 @@ export default function TeacherProfilePage() {
               {profile.courses.map(course => (
                 <div 
                   key={course.id} 
-                  onClick={() => window.location.href = `/series/${course.id}`}
-                  className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group cursor-pointer flex flex-col"
+                  className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group flex flex-col"
                 >
                   <div className={cn("h-40 w-full relative", course.thumbnail)}>
                      <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
