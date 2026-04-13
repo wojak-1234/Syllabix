@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState } from "react"
+import { useState, use } from "react"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
@@ -19,12 +19,89 @@ import {
 
 // ── Mock Data ────────────────────────────────────────────────────────
 
-const MOCK_LECTURE_CONTENT = {
-  id: "l3",
-  title: "Pandas 기초 다지기",
-  learningObjective: "데이터 분석의 핵심 도구인 Pandas의 DataFrame 구조를 파악하고 기본 조작을 수행할 수 있다.",
-  conceptTags: ["Pandas", "DataFrame", "Series", "Data_Analysis"],
-  content: `
+const LECTURES_DATA: Record<string, any> = {
+  "l1": {
+    id: "l1",
+    title: "파이썬 환경 설정",
+    learningObjective: "파이썬을 설치하고 개발 환경(VS Code)을 구성하여 코드를 실행할 수 있다.",
+    conceptTags: ["Python", "Installation", "VSCode", "Setup"],
+    content: `
+# 파이썬 설치 및 환경 구성
+데이터 분석의 첫 걸음은 도구를 준비하는 것입니다.
+
+### 1. 파이썬 설치
+공식 홈페이지(python.org)에서 최신 버전을 다운로드합니다. 설치 시 꼭 **'Add Python to PATH'** 옵션을 체크해주세요.
+
+### 2. IDE(통합 개발 환경) 설정
+우리는 가장 대중적인 **Visual Studio Code**를 사용합니다. 
+확장 탭에서 'Python' 익스텐션을 설치하면 준비 완료!
+
+### 3. 첫 코드 실행
+\`\`\`python
+print("Hello, Syllabix!")
+\`\`\`
+터미널에 위 메시지가 찍힌다면 성공입니다.
+    `,
+    quizzes: [
+      {
+        id: "q1",
+        question: "파이썬 설치 시 환경 변수 설정을 위해 반드시 체크해야 할 항목은?",
+        choices: [
+          { label: "Install for all users", isCorrect: false },
+          { label: "Add Python to PATH", isCorrect: true },
+          { label: "Download debug symbols", isCorrect: false },
+          { label: "Precompile standard library", isCorrect: false }
+        ],
+        explanation: "PATH에 추가해야 터미널 어디서든 python 명령어를 사용할 수 있습니다.",
+        conceptTag: "Setup"
+      }
+    ],
+    hasCodingTest: false
+  },
+  "l2": {
+    id: "l2",
+    title: "자료형과 변수",
+    learningObjective: "데이터를 저장하는 변수의 개념을 이해하고, 숫자형과 문자열 자료형을 다룰 수 있다.",
+    conceptTags: ["Variable", "DataType", "Integer", "String"],
+    content: `
+# 자료형과 변수
+컴퓨터는 정보를 기억하기 위해 '변수'라는 상자를 사용합니다.
+
+### 1. 변수 선언
+파이썬은 자료형을 따로 선언할 필요가 없이 대입하는 순간 결정됩니다.
+\`\`\`python
+name = "Alice"  # 문자열(String)
+age = 25        # 정수형(Integer)
+\`\`\`
+
+### 2. 기본 자료형
+- **int**: 정수 (1, 2, -5)
+- **float**: 실수 (3.14, 0.5)
+- **str**: 문자열 ("Hello")
+- **bool**: 참/거짓 (True, False)
+    `,
+    quizzes: [
+      {
+        id: "q1",
+        question: "다음 중 실수(Floating point) 자료형인 것은?",
+        choices: [
+          { label: "10", isCorrect: false },
+          { label: "3.14", isCorrect: true },
+          { label: "'100'", isCorrect: false },
+          { label: "True", isCorrect: false }
+        ],
+        explanation: "소수점이 포함된 숫자는 float 자료형입니다.",
+        conceptTag: "DataType"
+      }
+    ],
+    hasCodingTest: false
+  },
+  "l3": {
+    id: "l3",
+    title: "Pandas 기초 다지기",
+    learningObjective: "데이터 분석의 핵심 도구인 Pandas의 DataFrame 구조를 파악하고 기본 조작을 수행할 수 있다.",
+    conceptTags: ["Pandas", "DataFrame", "Series", "Data_Analysis"],
+    content: `
 # Pandas 란?
 Pandas는 파이썬에서 데이터 분석을 위해 사용하는 가장 강력한 라이브러리입니다. 
 주로 표(Table) 형식의 데이터를 다루며, 엑셀과 스프레드시트의 프로그래밍 버전이라고 생각하시면 됩니다.
@@ -39,26 +116,28 @@ import pandas as pd
 df = pd.read_csv('data.csv')
 print(df.head())
 \`\`\`
-  `,
-  quizzes: [
-    {
-      id: "q1",
-      question: "Pandas에서 2차원 테이블 형태의 데이터를 다루는 핵심 자료구조는 무엇인가요?",
-      choices: [
-        { label: "Series", isCorrect: false },
-        { label: "DataFrame", isCorrect: true },
-        { label: "List", isCorrect: false },
-        { label: "Dictionary", isCorrect: false }
-      ],
-      explanation: "DataFrame은 행(row)과 열(column)을 가지는 2차원 구조이며, 1차원 구조는 Series입니다.",
-      conceptTag: "DataFrame"
-    }
-  ],
-  hasCodingTest: true
+    `,
+    quizzes: [
+      {
+        id: "q1",
+        question: "Pandas에서 2차원 테이블 형태의 데이터를 다루는 핵심 자료구조는 무엇인가요?",
+        choices: [
+          { label: "Series", isCorrect: false },
+          { label: "DataFrame", isCorrect: true },
+          { label: "List", isCorrect: false },
+          { label: "Dictionary", isCorrect: false }
+        ],
+        explanation: "DataFrame은 행(row)과 열(column)을 가지는 2차원 구조이며, 1차원 구조는 Series입니다.",
+        conceptTag: "DataFrame"
+      }
+    ],
+    hasCodingTest: true
+  }
 }
 
-export default function LectureLearnPage() {
-  const [lecture] = useState(MOCK_LECTURE_CONTENT)
+export default function LectureLearnPage({ params }: { params: Promise<{ seriesId: string, lectureId: string }> }) {
+  const resolvedParams = use(params)
+  const lecture = LECTURES_DATA[resolvedParams.lectureId] || LECTURES_DATA["l3"]
   const [showQuiz, setShowQuiz] = useState(false)
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
   const [quizResult, setQuizResult] = useState<'pending' | 'correct' | 'wrong'>('pending')
@@ -74,9 +153,9 @@ export default function LectureLearnPage() {
   const handleNextStep = () => {
     // 코딩테스트가 있으면 코딩테스트 페이지로 이동
     if (lecture.hasCodingTest) {
-      window.location.href = `/learn/s1/lecture/${lecture.id}/coding-test`
+      window.location.href = `/learn/${resolvedParams.seriesId}/lecture/${lecture.id}/coding-test`
     } else {
-      window.location.href = `/learn/s1`
+      window.location.href = `/learn/${resolvedParams.seriesId}`
     }
   }
 
@@ -89,7 +168,7 @@ export default function LectureLearnPage() {
         <div className="flex-1 overflow-y-auto no-scrollbar relative custom-bottom-shadow z-10 border-r border-slate-100">
           <div className="max-w-3xl mx-auto px-8 py-12 pb-32">
             <button
-              onClick={() => window.location.href = '/learn/s1'}
+              onClick={() => window.location.href = `/learn/${resolvedParams.seriesId}`}
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-orange-600 font-medium mb-8 transition-colors"
             >
               <ChevronLeft className="h-4 w-4" /> 커리큘럼 리스트로 돌아가기
@@ -98,7 +177,7 @@ export default function LectureLearnPage() {
             {/* Title & Meta */}
             <div className="mb-10">
               <div className="flex items-center gap-2 mb-4">
-                {lecture.conceptTags.map(tag => (
+                {lecture.conceptTags.map((tag: string) => (
                   <Badge key={tag} className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none px-2.5 py-0.5 rounded-md font-bold text-[10px]">
                     {tag}
                   </Badge>
@@ -116,23 +195,9 @@ export default function LectureLearnPage() {
               </div>
             </div>
 
-            {/* Markdown Content (Mock Rendered View) */}
-            <div className="prose prose-slate prose-orange max-w-none">
-              <h2>Pandas 란?</h2>
-              <p>Pandas는 파이썬에서 데이터 분석을 위해 사용하는 가장 강력한 라이브러리입니다. 주로 표(Table) 형식의 데이터를 다루며, 엑셀과 스프레드시트의 프로그래밍 버전이라고 생각하시면 됩니다.</p>
-              
-              <h3>핵심 자료구조</h3>
-              <ul>
-                <li><strong>Series</strong>: 1차원 배열 형태의 데이터 구조</li>
-                <li><strong>DataFrame</strong>: 2차원 테이블 형태의 데이터 구조 (로우와 컬럼으로 구성)</li>
-              </ul>
-
-              <h3>데이터 불러오기</h3>
-              <pre className="bg-slate-900 text-slate-50 p-4 rounded-2xl overflow-x-auto text-sm leading-relaxed shadow-inner">
-                <code className="text-orange-300">import</code> pandas <span className="text-orange-300">as</span> pd<br/>
-                df <span className="text-orange-300">=</span> pd.read_csv(<span className="text-emerald-300">'data.csv'</span>)<br/>
-                <span className="text-blue-300">print</span>(df.head())
-              </pre>
+            {/* Content Area (Dynamic) */}
+            <div className="prose prose-slate prose-orange max-w-none whitespace-pre-wrap font-medium text-gray-700 leading-relaxed">
+               {lecture.content}
             </div>
           </div>
         </div>
@@ -171,7 +236,7 @@ export default function LectureLearnPage() {
                 </div>
 
                 <div className="space-y-2.5">
-                  {lecture.quizzes[0].choices.map((choice, idx) => (
+                  {lecture.quizzes[0].choices.map((choice: any, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => {

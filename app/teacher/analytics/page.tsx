@@ -46,8 +46,11 @@ const MOCK_ANALYTICS: Record<string, any> = {
         lectureTitle: "함수와 모듈",
         concept: "전역 변수 vs 지역 변수 (Scope)",
         failRate: 67,
-        studentComment: "전역 변수가 왜 함수 안에서 수정이 안 되는지 이해가 안 가요.",
-        aiSuggestion: "변수 스코프에 대한 시각적 다이어그램을 보충 자료로 추가하고, 'global' 키워드 사용법에 대한 실습 예제를 2개 더 배치하는 것이 좋습니다.",
+        studentDifficulties: [
+          "전역 변수가 함수 내에서 global 없이 수정되지 않는 점에 대해 80% 이상의 수강생이 의문을 제기함",
+          "메모리 구조(Stack/Heap) 상에서 변수가 저장되는 위치를 혼동하고 있음"
+        ],
+        aiDeepFeedback: "함수 내부에서의 'Shadowing' 개념을 설명할 때 시각적 스택 프레임 다이어그램을 활용하세요. 단순히 global 키워드를 가르치기보다, 불변성(Immutability) 관점에서 왜 지역 변수 사용이 권장되는지 철학적인 접근이 필요합니다.",
         ragAnchor: "이 오답은 2장 3절 '로컬 스코프의 이해' 파트의 예제 코드와 89% 일치합니다."
       }
     ]
@@ -66,8 +69,11 @@ const MOCK_ANALYTICS: Record<string, any> = {
         lectureTitle: "useEffect 입문",
         concept: "의존성 배열(Dependency Array)",
         failRate: 91,
-        studentComment: "빈 배열을 넣었는데 왜 자꾸 무한 루프가 돌까요?",
-        aiSuggestion: "참조 타입 메모이제이션(useCallback, useMemo)과 연계된 의존성 비교 원리를 심화 강의로 구성하세요.",
+        studentDifficulties: [
+          "객체나 배열을 의존성으로 넣었을 때 매 렌더링마다 참조가 바뀌어 무한 루프가 발생하는 원리를 대부분의 학생이 파악하지 못함",
+          "클로저 문제로 인한 'Stale Closure' 현상을 useEffect 내에서 디버깅하는 데 어려움을 겪음"
+        ],
+        aiDeepFeedback: "참조 타입의 메모이제이션(useMemo, useCallback)을 먼저 학습시킨 후 useEffect에 적용하는 순서로 커리큘럼을 조정하세요. 특히 '의존성 배열은 필터링이 아니라 선언적 연결'임을 강조하는 것이 좋습니다.",
         ragAnchor: "3장 'useEffect 라이프사이클' 섹션의 클린업 함수 설명 부분과 연관성이 높습니다."
       }
     ]
@@ -104,18 +110,15 @@ function AnalyticsContent() {
     setIsAnalyzing(true)
     setTimeout(() => {
       setIsAnalyzing(false)
-      setSuccess("LangChain 에이전트가 최신 데이터 분석을 마쳤습니다.")
-      setTimeout(() => setSuccess(null), 3000)
-    }, 2500)
+      setSuccess("전문 LangChain 에이전트(GPT-4o 기반) 분석 시뮬레이션이 완료되었습니다.")
+      setTimeout(() => setSuccess(null), 4000)
+    }, 2800)
   }
 
-  const handleAddSupplement = async (bpId: string, concept: string) => {
-    setIsAdding(bpId)
-    setTimeout(() => {
-      setIsAdding(null)
-      setSuccess(`${concept} 보충 강좌가 삽입되었습니다!`)
-      setTimeout(() => setSuccess(null), 3000)
-    }, 1500)
+  const handleDetailedFeedback = async (bpId: string) => {
+    // 향후 실제 AI 상세 리포트 생성 로직 자리
+    setSuccess("해당 취약점에 대한 AI 상세 코칭 가이드가 생성되었습니다.")
+    setTimeout(() => setSuccess(null), 3000)
   }
 
   return (
@@ -225,13 +228,29 @@ function AnalyticsContent() {
                         </div>
                       </div>
 
-                      <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100">
-                        <h5 className="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2">
-                          <Lightbulb className="h-4 w-4" /> AI 강의 개선 가이드
-                        </h5>
-                        <p className="text-sm text-gray-700 leading-relaxed font-medium">
-                          {bp.aiSuggestion}
-                        </p>
+                      <div className="space-y-4">
+                        <div>
+                          <h5 className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <AlertTriangle className="h-3 w-3" /> 학생들이 어려워하는 핵심 원인
+                          </h5>
+                          <ul className="space-y-2">
+                             {bp.studentDifficulties.map((diff: string, i: number) => (
+                               <li key={i} className="text-sm text-gray-600 font-medium flex items-start gap-2">
+                                 <span className="mt-1 h-1 w-1 rounded-full bg-rose-300 shrink-0" />
+                                 {diff}
+                               </li>
+                             ))}
+                          </ul>
+                        </div>
+
+                        <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100">
+                          <h5 className="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2">
+                            <BrainCircuit className="h-4 w-4" /> AI 원인 분석 및 교수법 제안
+                          </h5>
+                          <p className="text-sm text-gray-700 leading-relaxed font-medium italic">
+                            "{bp.aiDeepFeedback}"
+                          </p>
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-4 border-t border-slate-100">
@@ -239,11 +258,10 @@ function AnalyticsContent() {
                            <Search className="h-3 w-3" /> {bp.ragAnchor}
                          </p>
                          <Button 
-                           onClick={() => handleAddSupplement(bp.id, bp.concept)}
-                           disabled={isAdding === bp.id}
-                           className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold h-10 px-6 shadow-lg shadow-emerald-500/20"
+                           onClick={() => handleDetailedFeedback(bp.id)}
+                           className="bg-gray-900 hover:bg-black text-white rounded-xl font-bold h-10 px-6 shadow-md transition-all active:scale-95"
                          >
-                           보충 강좌 추천 삽입
+                           상세 피드백 리포트 생성
                          </Button>
                       </div>
                    </div>

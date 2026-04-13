@@ -36,7 +36,13 @@ const curriculumSchema = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { goal, currentLevel, hoursPerWeek, excludes } = await req.json()
+    const body = await req.json()
+    const { goal, currentLevel, hoursPerWeek, excludes } = body
+    console.log("[Curriculum API] Received request:", { goal, currentLevel, hoursPerWeek })
+
+    if (!goal) {
+      return NextResponse.json({ error: "Goal is required" }, { status: 400 })
+    }
 
     // Mock Database functionality
     const availableCourses = [
@@ -45,25 +51,25 @@ export async function POST(req: NextRequest) {
       { id: "c3", title: "TypeScript 마스터", tags: ["TypeScript"], difficulty: "Advanced" }
     ]
 
-    const systemPrompt = `당신은 교육 커리큘럼 전문가입니다.
-학습자의 목표와 현재 수준을 분석해서 최적화된 학습 경로를 설계하세요.
+    const systemPrompt = `당신은 전 세계의 학습 데이터를 분석하여 최적의 학습 경로를 설계하는 'Syllabix 수석 교육 설계자(Senior Learning Architect)'입니다. 
+당신의 목표는 단순한 일정표 작성이 아니라, 학습자의 인지적 과부하를 방지하고 동기를 극대화하는 '전략적 마스터플랜'을 수립하는 것입니다.
 
-반드시 JSON 형식으로만 응답하고, 다음 원칙을 따르세요:
-1. 현재 수준에서 목표까지 역산해서 단계를 설계한다
-2. 주당 학습 시간을 기반으로 현실적인 주차를 계산한다
-3. 과거 학습자 패턴 기반으로 riskLevel을 정확히 예측한다
-4. 가능하면 아래 제공된 강의 중 관련 강의 ID를 linkedCourseIds에 포함시켜라
+[당신의 페르소나 및 원칙]
+1. 분석적 사고: 학습자의 현재 수준과 목표 사이의 '지식 격차(Knowledge Gap)'를 정밀하게 진단합니다.
+2. 현실적 제약 고려: 주당 가용 시간을 바탕으로 실현 불가능한 계획은 지양하고, 집중이 필요한 구간에서 학습 밀도를 조정합니다.
+3. 이탈 방지 전략 (Risk Management): 과거 데이터를 기반으로 학습자가 포기하기 쉬운 '고비(Risk Points)'를 예측하고, 이를 극복하기 위한 인사이트를 aiInsight 필드에 상세히 기록합니다.
+4. 배제 원칙: 학습자가 제외하고 싶어 하는 기술이나 방식은 철저히 배제하되, 필수적인 대체 개념이 있다면 제안합니다.
 
-사용 가능한 강의 목록:
-${JSON.stringify(availableCourses, null, 2)}`
+반드시 JSON 형식으로만 응답하며, 지정된 JSON 스키마 구조를 엄격히 준수하세요.`
 
-    const userPrompt = `학습자 정보:
-- 최종 목표: ${goal}
-- 현재 수준: ${currentLevel}
-- 주당 학습 시간: ${hoursPerWeek}시간
-- 제외 희망: ${excludes || '없음'}
+    const userPrompt = `[학습자 커스터마이징 요청]
+- 관심 주제 및 목표: ${goal}
+- 현재 숙련도: ${currentLevel}
+- 주당 학습 가용 시간: ${hoursPerWeek}시간
+- 학습 환경 제약/제외 사항: ${excludes || '없음'}
 
-위 정보를 바탕으로 최적 커리큘럼을 분석하고 지정된 JSON 스키마 구조로 결과만 출력해줘.`
+사용 가능한 강의 리소스를 참고하여, 이 학습자만을 위한 독창적이고 전문적인 커리큘럼을 생성하세요. 
+강의 목록: ${JSON.stringify(availableCourses)}`
 
     // Use Gemini
     const model = getGeminiModel({
@@ -73,12 +79,15 @@ ${JSON.stringify(availableCourses, null, 2)}`
       temperature: 0.2,
     })
 
+    console.log("[Curriculum API] Calling Gemini...")
     const result = await model.generateContent(
       systemPrompt + '\n\n' + userPrompt
     )
 
     const response = await result.response
     const responseText = response.text()
+    console.log("[Curriculum API] Gemini Response Received")
+
     if (!responseText) {
       throw new Error("No response generated from Gemini")
     }
@@ -91,7 +100,7 @@ ${JSON.stringify(availableCourses, null, 2)}`
     return NextResponse.json({ curriculum, curriculumId: savedId })
 
   } catch (error: any) {
-    console.error("Gemini API Error:", error)
+    console.error("[Curriculum API] Error:", error)
     return NextResponse.json(
       { error: "Failed to generate curriculum", details: error.message },
       { status: 500 }

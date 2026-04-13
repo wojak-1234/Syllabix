@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -69,6 +69,39 @@ export default function TeacherProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState({ introduction: profile.introduction, careerList: profile.career.join('\n') })
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPublishedSeries = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch('/api/teacher/series?teacherId=mock-teacher-id')
+        if (!res.ok) throw new Error("Failed to fetch")
+        const { data } = await res.json()
+        
+        const publishedCourses = data
+          .filter((s: any) => s.status === 'PUBLISHED')
+          .map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            students: s._count?.enrollments || 0,
+            rating: 4.8, 
+            status: "공개 중",
+            thumbnail: "bg-gradient-to-br from-emerald-400 to-teal-500",
+          }))
+        
+        setProfile(prev => ({
+          ...prev,
+          courses: publishedCourses
+        }))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPublishedSeries()
+  }, [])
 
   const handleSave = () => {
     setProfile({
@@ -211,33 +244,49 @@ export default function TeacherProfilePage() {
           <h2 className="text-2xl font-black text-gray-900 mb-8 flex items-center gap-2 px-2">
             <GraduationCap className="h-7 w-7 text-emerald-500 p-1 bg-emerald-50 rounded-lg" /> 현재 가르치는 강의
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {profile.courses.map(course => (
-              <div key={course.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group cursor-pointer flex flex-col">
-                <div className={cn("h-40 w-full relative", course.thumbnail)}>
-                   <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
-                   <div className="absolute top-4 left-4">
-                     <Badge className="bg-white/95 text-gray-900 border-none font-bold shadow-sm">{course.status}</Badge>
-                   </div>
-                </div>
-                <div className="p-6 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 mb-2 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
-                      {course.title}
-                    </h3>
+          
+          {loading ? (
+             <div className="py-20 flex flex-col items-center justify-center bg-white/50 rounded-[3rem] border border-dashed border-slate-200">
+                <div className="h-10 w-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
+                <p className="text-gray-400 font-bold">강의 목록을 불러오고 있습니다...</p>
+             </div>
+          ) : profile.courses.length === 0 ? (
+             <div className="py-20 flex flex-col items-center justify-center bg-white/50 rounded-[3rem] border border-dashed border-slate-200">
+                <p className="text-gray-400 font-bold">현재 공개된 강의가 없습니다.</p>
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {profile.courses.map(course => (
+                <div 
+                  key={course.id} 
+                  onClick={() => window.location.href = `/series/${course.id}`}
+                  className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group cursor-pointer flex flex-col"
+                >
+                  <div className={cn("h-40 w-full relative", course.thumbnail)}>
+                     <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
+                     <div className="absolute top-4 left-4">
+                       <Badge className="bg-white/95 text-gray-900 border-none font-bold shadow-sm">{course.status}</Badge>
+                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-50">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
-                      <Users className="h-4 w-4 text-emerald-600" /> {course.students.toLocaleString()}명 수강
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-black text-gray-900 mb-2 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
+                        {course.title}
+                      </h3>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
-                      <Star className="h-4 w-4 text-amber-400 fill-amber-400" /> 평점 {course.rating}
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-50">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
+                        <Users className="h-4 w-4 text-emerald-600" /> {course.students.toLocaleString()}명 수강
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
+                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" /> 평점 {course.rating}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

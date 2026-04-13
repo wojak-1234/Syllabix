@@ -910,3 +910,32 @@ No.
 
 - User Intervention:
 No.
+
+### [Skill Usage Log]
+
+- Timestamp: 2026-04-13T16:40:00Z
+- Skill Name: AI Curriculum Generation & Next.js 15+ Dynamic Route Optimization
+
+- Context:
+1. 커리큘럼 생성 시 "Failed to fetch" 오류 해결 요청.
+2. Next.js 15+ 사양 변경으로 인한 `params` 비동기 접근 에러(`params is a Promise`) 해결 요청.
+3. 강좌 1, 2 페이지의 하드코딩된 내용을 실제 제목과 내용으로 교체 요청.
+
+- Reason for Using This Skill:
+존재하지 않는 모델명(`gemini-3.1-flash-lite-preview`)으로의 일시적 회귀 및 Next.js 최신 버전의 파괴적 변경사항(Async Dynamic APIs)에 대응하기 위해 `React.use()` 패턴 도입이 필수적이었음. 또한 `"use client"` 지시어 인식 오류를 해결하여 Client Hooks 사용을 정상화함.
+
+- Execution Summary:
+1. **모델 설정 수정**: `lib/gemini.ts`의 모델명을 유저 요청에 따라 `gemini-3.1-flash-lite-preview`로 원복.
+2. **비동기 API 대응**: `app/learn/[seriesId]/lecture/[lectureId]/page.tsx`, `coding-test/page.tsx`, `series/[id]/page.tsx`, `learn/[seriesId]/page.tsx` 등 모든 동적 라우트 페이지에서 `React.use(params)`를 사용하여 매개변수 언래핑.
+3. **지시어 및 임포트 교정**: `"use client";` 문문에 세미콜론을 추가하고 누락된 아이콘 임포트 및 `use client` 위치를 최상단으로 재조정하여 빌드 에러 해결.
+4. **동적 데이터 바인딩**: 강의 학습 페이지의 Mock 데이터를 확장(강좌 1: 환경 설정, 강좌 2: 자료형)하고 JSX를 수정하여 URL에 맞는 컨텐츠가 렌더링되도록 개선.
+5. **API 명세 문서화**: 프로젝트 내 AI API와 일반 API 목록을 정리한 `PROJECT_API_DOC.md` 아티팩트 생성.
+
+- Result:
+브라우저/서버 사이드 에러 전면 해결. 모든 강좌 페이지가 하드코딩 없이 URL 매개변수에 따라 정확한 내용을 표시함. AI 커리큘럼 생성 API의 안정성 확보.
+
+- User Intervention:
+Yes - 유저가 특정 모델명 사용을 지시하고, 발생한 Next.js 빌드 에러 메시지를 제공하여 빠른 디버깅을 도움.
+
+- Improvement Insight:
+Next.js 15+ 환경에서는 동적 경로 매개변수 사용 시 항상 `use()` 훅을 통한 비동기 처리를 기본 패턴으로 정착시켜야 함. 에러 메시지(`1:20` 등 위치 정보)를 통해 지시어 누락뿐만 아니라 위치 오류까지 기민하게 파악하는 역량이 중요함.

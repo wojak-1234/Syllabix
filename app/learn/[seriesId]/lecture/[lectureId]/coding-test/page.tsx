@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { useState, useEffect, use } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   ChevronLeft,
   PlayCircle,
@@ -16,7 +16,7 @@ import {
   Moon,
   ChevronRight,
   X
-} from "lucide-react"
+} from "lucide-react";
 
 // ── Mock Data ────────────────────────────────────────────────────────
 
@@ -34,24 +34,25 @@ def solution(df):
     { input: "df = pd.DataFrame({'age': [20, 30, 40]})", expectedOutput: "   age\n1   30\n2   40" }
   ],
   maxAttempts: 3
-}
+};
 
-export default function CodingTestPage() {
-  const [testBase] = useState(MOCK_TEST)
-  const [code, setCode] = useState(MOCK_TEST.starterCode)
-  const [attempts, setAttempts] = useState(0)
-  const [result, setResult] = useState<'pending' | 'success' | 'fail'>('pending')
-  const [hint, setHint] = useState<string | null>(null)
-  const [isEvaluating, setIsEvaluating] = useState(false)
-  const [showErrorNote, setShowErrorNote] = useState(false)
-  const [dismissErrorNote, setDismissErrorNote] = useState(false)
+export default function CodingTestPage({ params }: { params: Promise<{ seriesId: string, lectureId: string }> }) {
+  const resolvedParams = use(params);
+  const [testBase] = useState(MOCK_TEST);
+  const [code, setCode] = useState(MOCK_TEST.starterCode);
+  const [attempts, setAttempts] = useState(0);
+  const [result, setResult] = useState<'pending' | 'success' | 'fail'>('pending');
+  const [hint, setHint] = useState<string | null>(null);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [showErrorNote, setShowErrorNote] = useState(false);
+  const [dismissErrorNote, setDismissErrorNote] = useState(false);
   
   // 테마 (light/dark)
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   const handleRunCode = async () => {
-    setIsEvaluating(true)
-    setHint(null)
+    setIsEvaluating(true);
+    setHint(null);
     
     try {
       const response = await fetch('/api/student/evaluate', {
@@ -61,36 +62,38 @@ export default function CodingTestPage() {
           code,
           questionTitle: testBase.title,
           questionDescription: testBase.description,
-          attempts
+          attempts,
+          studentId: "user-1", 
+          codingTestId: testBase.id
         })
-      })
+      });
       
-      if (!response.ok) throw new Error('Network response was not ok')
+      if (!response.ok) throw new Error('Network response was not ok');
       
-      const data = await response.json()
-      const newAttempts = attempts + 1
-      setAttempts(newAttempts)
+      const data = await response.json();
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
 
       if (data.isCorrect) {
-        setResult('success')
-        setHint(data.feedback)
+        setResult('success');
+        setHint(data.feedback);
       } else {
-        setResult('fail')
-        setHint(data.feedback)
+        setResult('fail');
+        setHint(data.feedback);
         
         if (newAttempts >= testBase.maxAttempts) {
-          setShowErrorNote(true)
+          setShowErrorNote(true);
         }
       }
     } catch (error) {
-      console.error('Evaluation failed:', error)
-      setHint("AI 튜터가 잠시 자리를 비웠네요. 코드를 다시 점검하고 제출해 보세요.")
+      console.error('Evaluation failed:', error);
+      setHint("AI 튜터가 잠시 자리를 비웠네요. 코드를 다시 점검하고 제출해 보세요.");
     } finally {
-      setIsEvaluating(false)
+      setIsEvaluating(false);
     }
-  }
+  };
 
-  const isDark = theme === 'dark'
+  const isDark = theme === 'dark';
 
   return (
     <main className={cn(
@@ -98,7 +101,7 @@ export default function CodingTestPage() {
       isDark ? "bg-slate-900 text-slate-300" : "bg-slate-50 text-slate-900"
     )}>
 
-      {/* 오답 노트 생성 Notification (기회 소진 시 표시) */}
+      {/* 오답 노트 생성 Notification */}
       {showErrorNote && !dismissErrorNote && (
         <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-500">
           <div className="bg-white rounded-2xl shadow-2xl border border-red-100 flex items-start gap-4 p-4 pr-12 max-w-lg relative">
@@ -121,7 +124,7 @@ export default function CodingTestPage() {
 
       <div className="flex-1 flex h-full"> 
         
-        {/* Left: Problem Description */}
+        {/* Left column */}
         <div className={cn(
           "w-[400px] flex flex-col overflow-y-auto no-scrollbar border-r transition-colors duration-500",
           isDark ? "bg-slate-800/50 border-slate-700/50" : "bg-white border-slate-200 shadow-sm z-10"
@@ -129,7 +132,7 @@ export default function CodingTestPage() {
           <div className="p-8">
             <div className="flex items-center justify-between mb-8">
                <button
-                 onClick={() => window.location.href = '/learn/s1'}
+                 onClick={() => window.location.href = `/learn/${resolvedParams.seriesId}`}
                  className={cn(
                    "flex items-center gap-1.5 text-xs font-medium transition-colors",
                    isDark ? "text-slate-400 hover:text-white" : "text-gray-500 hover:text-orange-600"
@@ -208,7 +211,7 @@ export default function CodingTestPage() {
           </div>
         </div>
 
-        {/* Right: Code Editor & Runner */}
+        {/* Right column */}
         <div className="flex-1 flex flex-col z-0 relative">
            <div className={cn(
              "h-14 border-b flex items-center justify-between px-4 transition-colors duration-500",
@@ -226,9 +229,7 @@ export default function CodingTestPage() {
                )}>solution.py</span>
              </div>
              
-             {/* Submission Panel */}
              <div className="flex items-center gap-4">
-               {/* 3회 시도가 넘어가면 스킵 버튼을 노출 */}
                {showErrorNote && result !== 'success' && (
                  <Button 
                    variant="ghost" 
@@ -272,7 +273,6 @@ export default function CodingTestPage() {
              </div>
            </div>
 
-           {/* Editor Mock */}
            <div className={cn(
              "flex-1 relative transition-colors duration-500",
              isDark ? "bg-slate-900" : "bg-slate-50/50"
@@ -289,7 +289,6 @@ export default function CodingTestPage() {
              />
            </div>
 
-           {/* Feedback/Hint Bar */}
            {hint && result !== 'success' && (
              <div className={cn(
                "border-t p-4 animate-in slide-in-from-bottom-2 duration-300",
@@ -315,7 +314,6 @@ export default function CodingTestPage() {
              </div>
            )}
 
-           {/* Success Bar */}
            {result === 'success' && (
              <div className={cn(
                "border-t p-4 animate-in slide-in-from-bottom-2 duration-300",
@@ -348,5 +346,5 @@ export default function CodingTestPage() {
         </div>
       </div>
     </main>
-  )
+  );
 }

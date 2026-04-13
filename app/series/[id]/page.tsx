@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from "react"
+import { useState, use } from "react"
+import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -33,7 +34,9 @@ const MOCK_SERIES_DETAIL = {
   ]
 }
 
-export default function SeriesDetailPage({ params }: { params: { id: string } }) {
+export default function SeriesDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
+  const router = useRouter()
   const [course] = useState(MOCK_SERIES_DETAIL)
   const [isJoining, setIsJoining] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -41,21 +44,11 @@ export default function SeriesDetailPage({ params }: { params: { id: string } })
   const handleJoin = async () => {
     setIsJoining(true)
     
-    // 원래는 `/api/student/enrollments` 에 POST 하는 부분이지만, MVP 상 Mock API 딜레이 후 이동 처리
     try {
-      /*
-      await fetch('/api/student/enrollments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: 'student_1', seriesId: params.id })
-      })
-      */
-      
       setTimeout(() => {
         setIsJoining(false)
         setIsSuccess(true)
         setTimeout(() => {
-          // 등록 성공 후, 학습 화면으로 즉시 전환
           window.location.href = `/learn/${course.id}`
         }, 1500)
       }, 1000)
@@ -76,7 +69,7 @@ export default function SeriesDetailPage({ params }: { params: { id: string } })
         
         <div className="container mx-auto max-w-4xl px-4 relative z-10">
           <button
-            onClick={() => window.history.back()}
+            onClick={() => router.back()}
             className="flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-white transition-colors mb-10 group"
           >
             <ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" /> 뒤로 가기

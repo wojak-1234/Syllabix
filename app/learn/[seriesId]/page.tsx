@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, use } from "react"
 import { AnimatedBackground } from "@/components/animated-background"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -32,7 +32,8 @@ const MOCK_ENROLLMENT_DETAIL = {
   ]
 }
 
-export default function SeriesLearnPage() {
+export default function SeriesLearnPage({ params }: { params: Promise<{ seriesId: string }> }) {
+  const resolvedParams = use(params)
   const [detail] = useState(MOCK_ENROLLMENT_DETAIL)
 
   return (
@@ -79,7 +80,7 @@ export default function SeriesLearnPage() {
               className="h-12 px-6 rounded-2xl font-bold bg-gray-900 text-white hover:bg-orange-600 transition-colors shadow-lg"
               onClick={() => {
                 const currentId = detail.lectures.find(l => l.isCurrent)?.id || detail.lectures[0].id;
-                window.location.href = `/learn/${detail.seriesId}/lecture/${currentId}`;
+                window.location.href = `/learn/${resolvedParams.seriesId}/lecture/${currentId}`;
               }}
             >
               이어서 학습하기 <PlayCircle className="h-4 w-4 ml-2" />
@@ -104,7 +105,7 @@ export default function SeriesLearnPage() {
                 )}
                 onClick={() => {
                   if (lecture.isCompleted || lecture.isCurrent) {
-                    window.location.href = `/learn/${detail.seriesId}/lecture/${lecture.id}`;
+                    window.location.href = `/learn/${resolvedParams.seriesId}/lecture/${lecture.id}`;
                   }
                 }}
               >
