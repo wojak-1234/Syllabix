@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getGeminiModel, MODELS } from '@/lib/gemini'
 import { ApiCache } from '@/lib/cache'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     // [데모용] 커리큘럼 생성 및 수락 시 사용되는 'user-1' ID로 통일

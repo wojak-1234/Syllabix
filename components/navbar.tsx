@@ -94,8 +94,12 @@ export function Navbar() {
             className="group relative flex items-center gap-2 text-xl font-bold"
           >
             <div className="relative">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-400 teacher:from-emerald-500 teacher:to-teal-400 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-lg group-hover:shadow-orange-500/30 teacher:group-hover:shadow-emerald-500/30" />
-              <div className="absolute inset-0 h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-400 teacher:from-emerald-500 teacher:to-teal-400 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-50" />
+              <img 
+                src="/logo.jpg" 
+                alt="Syllabix Logo" 
+                className="h-9 w-9 rounded-xl object-cover border border-white/50 shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-lg group-hover:shadow-orange-500/30 teacher:group-hover:shadow-emerald-500/30"
+              />
+              <div className="absolute inset-0 h-9 w-9 rounded-xl bg-orange-500/20 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-50" />
             </div>
             <span className="bg-gradient-to-r from-orange-600 to-amber-500 teacher:from-emerald-600 teacher:to-teal-500 bg-clip-text text-transparent transition-all duration-300 group-hover:from-orange-500 group-hover:to-amber-400 teacher:group-hover:from-emerald-500 teacher:group-hover:to-teal-400">
               Syllabix

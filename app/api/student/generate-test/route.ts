@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getGeminiModel, MODELS } from '@/lib/gemini'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   try {
     const { studentId, lectureId } = await req.json()

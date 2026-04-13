@@ -21,21 +21,8 @@ export const metadata: Metadata = {
   description: 'Syllabix는 AI 기반 교육 플랫폼으로, 학생과 교사의 학습 경험을 혁신합니다.',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/favicon.jpg',
+    apple: '/favicon.jpg',
   },
 }
 

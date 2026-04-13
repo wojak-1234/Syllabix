@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getGeminiModel, MODELS } from '@/lib/gemini'
 
+export const dynamic = 'force-dynamic'
+
 const phaseSchema = {
   type: "object",
   properties: {
