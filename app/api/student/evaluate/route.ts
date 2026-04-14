@@ -10,8 +10,11 @@ export async function POST(request: Request) {
       questionDescription, 
       attempts,
       studentId,      
-      lectureId    // 변경: 코딩 테스트 ID 대신 강좌 ID (동적 생성 연동)
+      lectureId,
+      codingTestId
     } = await request.json()
+
+    const targetLectureId = lectureId || codingTestId || "l1"
 
     if (code === undefined) {
       return NextResponse.json({ error: 'Code is required' }, { status: 400 })
@@ -55,10 +58,9 @@ export async function POST(request: Request) {
       aiResult = jsonMatch ? JSON.parse(jsonMatch[1]) : { isCorrect: false, feedback: "분석 실패", errorType: "RuntimeError", wrongReason: "AI 응답 파싱 실패", conceptTag: "Unknown" }
     }
 
-    // 2. 데이터베이스 연결 (DB 저장)
     // 실제 운영 시에는 auth session과 현재 강좌 맥락에서 가져오지만 여기서는 전달받은 것을 사용
     const targetStudentId = studentId || "user-1" 
-    const targetLectureId = lectureId || "l1"
+    // targetLectureId는 상단에서 이미 계산됨 (lectureId || codingTestId || "l1")
 
     try {
       const submission = await prisma.submission.create({

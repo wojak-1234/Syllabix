@@ -121,7 +121,7 @@ export default function CodingTestPage({ params }: { params: Promise<{ seriesId:
           questionDescription: testBase.description,
           attempts,
           studentId: "user-1", 
-          codingTestId: testBase.id
+          lectureId: resolvedParams.lectureId
         })
       });
       
