@@ -6,10 +6,6 @@ export async function POST(req: NextRequest) {
   try {
     const { seriesId } = await req.json()
 
-    if (!seriesId) {
-      return NextResponse.json({ error: "분석할 강좌(시리즈) ID가 누락되었습니다." }, { status: 400 })
-    }
-
     // 1. 해당 시리즈의 모든 강의 정보, 제출 내역, 오답 노트 수집
     const lectures = await prisma.lecture.findMany({
       where: { seriesId },
@@ -19,8 +15,8 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    if (!lectures || lectures.length === 0) {
-      return NextResponse.json({ error: "이 강좌에 등록된 강의가 없거나 분석할 데이터가 부족합니다." }, { status: 404 })
+    if (!lectures.length) {
+      return NextResponse.json({ error: "No lectures found for this series." }, { status: 404 })
     }
 
     // 2. 분석용 데이터 문자열화 (Gemini에게 전달용)
@@ -32,14 +28,12 @@ export async function POST(req: NextRequest) {
     }))
 
     // 3. Gemini 에이전트 호출
-    let aiText
-    try {
-       const model = getGeminiModel(
-         { responseMimeType: "application/json", temperature: 0.1 },
-         MODELS.PRO
-       )
-   
-       const prompt = `
+    const model = getGeminiModel(
+      { responseMimeType: "application/json", temperature: 0.1 },
+      MODELS.PRO
+    )
+
+    const prompt = `
 [SYSTEM: Syllabix Senior AI Learning Agent]
 당신은 학생들의 코딩 학습 데이터를 분석하여 교사에게 통찰을 제공하는 전문 교육 에이전트입니다.
 제공된 [데이터 컨텍스트]를 바탕으로 학생들이 공통적으로 겪는 'Blind Points(취약점)'를 식별하고 교수법을 제안하세요.
@@ -50,7 +44,7 @@ ${JSON.stringify(analysisContext, null, 2)}
 
 [요구사항]
 1. Domain Insight: 단순 문법 에러 말고, 근본적인 프로그래밍 개념의 오해(예: Scope, Memory, Sync/Async 등)를 찾아내세요.
-2. Output Format: 반드시 다음 JSON 배열 형식을 따르세요. (마크다운 태그 없이 순수 JSON만 반환)
+2. Output Format: 반드시 다음 JSON 배열 형식을 따르세요.
 [
   {
     "id": "아이디(unique)",
@@ -63,28 +57,16 @@ ${JSON.stringify(analysisContext, null, 2)}
   }
 ]
 `
-       const result = await model.generateContent(prompt)
-       aiText = result.response.text()
-    } catch (genError: any) {
-       console.error("Gemini Generation API Error:", genError)
-       return NextResponse.json({ error: "AI 에이전트 분석 생성 실패: " + (genError.message || "Unknown Error") }, { status: 500 })
-    }
 
-    // JSON 파싱 전 마크다운 코드 블록 제거
-    aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim()
+    const result = await model.generateContent(prompt)
+    const blindPoints = JSON.parse(result.response.text())
+
+    // (선택사항) 실시간으로 BlindPoint 테이블에 저장할 수 있으나, 여기서는 UI 연동을 위해 즉시 반환만 함.
     
-    let blindPoints
-    try {
-      blindPoints = JSON.parse(aiText)
-    } catch (parseError) {
-      console.error("Failed to parse AI response:", aiText)
-      return NextResponse.json({ error: "AI 분석 데이터 형식을 파싱하는 데 실패했습니다." }, { status: 500 })
-    }
-
     return NextResponse.json({ blindPoints })
 
   } catch (error: any) {
     console.error("Agent Analysis API Error:", error)
-    return NextResponse.json({ error: "서버 내부 오류가 발생했습니다." }, { status: 500 })
+    return NextResponse.json({ error: "AI 에이전트 분석 중 오류가 발생했습니다." }, { status: 500 })
   }
 }
