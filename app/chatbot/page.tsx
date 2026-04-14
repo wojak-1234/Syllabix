@@ -72,8 +72,8 @@ function CurriculumChatInner() {
       const form = JSON.parse(raw)
       setInitialForm(form)
     } else {
-      // No form data, redirect to onboarding to fill one
-      router.replace('/onboarding')
+      // No form data, redirect back
+      router.replace('/dashboard')
     }
   }, [])
 

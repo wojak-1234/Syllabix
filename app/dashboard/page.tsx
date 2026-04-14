@@ -56,7 +56,7 @@ export default function StudentDashboardPage() {
     const fetchData = async () => {
       try {
         const res = await fetch('/api/student/dashboard')
-          if (res.ok) {
+        if (res.ok) {
           const data = await res.json()
           setEnrollments(data.enrollments)
           setCurriculum(data.curriculum)
@@ -123,7 +123,7 @@ export default function StudentDashboardPage() {
               <BookOpen className="h-10 w-10 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 font-bold">아직 수강 중인 커리큘럼이 없습니다.</p>
               <p className="text-gray-400 text-sm mt-1 mb-5">아래 추천 커리큘럼에서 나에게 맞는 강의를 찾아보세요.</p>
-              <Button onClick={() => window.location.href = '/onboarding'} className="bg-orange-600 hover:bg-orange-700 rounded-xl font-bold">
+              <Button onClick={() => window.location.href = '/chatbot'} className="bg-orange-600 hover:bg-orange-700 rounded-xl font-bold">
                 AI 진단받기
               </Button>
             </div>

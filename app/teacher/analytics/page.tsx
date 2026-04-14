@@ -77,100 +77,6 @@ const MOCK_ANALYTICS: Record<string, any> = {
         ragAnchor: "3장 'useEffect 라이프사이클' 섹션의 클린업 함수 설명 부분과 연관성이 높습니다."
       }
     ]
-  },
-  "mock-파이썬으로-시작하는-자동화의-세계": {
-    seriesId: "mock-파이썬으로-시작하는-자동화의-세계",
-    seriesTitle: "파이썬으로 시작하는 자동화의 세계",
-    stats: { totalStudents: 42, avgProgress: 75 },
-    heatmap: [
-      { id: "l1", title: "파이썬 환경 설정", score: 98, errorCount: 2 },
-      { id: "l2", title: "변수와 데이터 타입", score: 72, errorCount: 45 },
-      { id: "l3", title: "엑셀 자동화 첫걸음", score: 58, errorCount: 88 },
-      { id: "l4", title: "이메일 대량 발송", score: 41, errorCount: 112 },
-    ],
-    blindPoints: [
-      {
-        id: "bp-py-1",
-        lectureTitle: "변수와 데이터 타입",
-        concept: "동적 타이핑과 형변환 (Type Casting)",
-        failRate: 64,
-        studentDifficulties: [
-          "input()으로 받은 값이 문자열임을 인지하지 못하고 바로 숫자 연산을 시도함",
-          "문자열과 숫자를 + 연산자로 합치려 할 때 발생하는 TypeError를 해결하지 못함"
-        ],
-        aiDeepFeedback: "입력값의 타입을 확인하는 type() 함수 활용법을 먼저 가르치세요. f-string을 활용한 문자열 포매팅을 대안으로 제시하면 형변환 실수를 크게 줄일 수 있습니다.",
-        ragAnchor: "1장 2절 '변수와 타입' 섹션의 int() 변환 예제와 밀접한 관련이 있습니다."
-      }
-    ]
-  },
-  "mock-Next.js-15:-완벽한-풀스택-가이드": {
-    seriesId: "mock-Next.js-15:-완벽한-풀스택-가이드",
-    seriesTitle: "Next.js 15: 완벽한 풀스택 가이드",
-    stats: { totalStudents: 64, avgProgress: 42 },
-    heatmap: [
-      { id: "nx1", title: "App Router", score: 85, errorCount: 12 },
-      { id: "nx2", title: "Server Components", score: 45, errorCount: 98 },
-      { id: "nx3", title: "Data Fetching", score: 62, errorCount: 54 },
-    ],
-    blindPoints: [
-      {
-        id: "bp-nx-1",
-        lectureTitle: "Server Components vs Client Components",
-        concept: "서버/클라이언트 컴포넌트 경계 및 직렬화",
-        failRate: 88,
-        studentDifficulties: [
-          "Server Component에서 'use client'가 필요한 이벤트 핸들러를 직접 사용하려 함",
-          "클라이언트 컴포넌트로 전달할 수 없는 데이터(함수 등)를 Props로 넘겨서 발생하는 에러"
-        ],
-        aiDeepFeedback: "컴포넌트 상단에 'use client'를 선언해야 하는 상황을 결정 트리(Decision Tree) 형태로 제공하세요. Props 직렬화 개념을 설명할 때 'JSON으로 변환 가능한가?'를 기준으로 삼도록 가이드하는 것이 좋습니다.",
-        ragAnchor: "Next.js 공식 문서 2-4 'Rendering' 섹션의 설명과 예제가 필요합니다."
-      }
-    ]
-  },
-  "mock-로블록스-게임-제작-입문-(Lua-코딩)": {
-    seriesId: "mock-로블록스-게임-제작-입문-(Lua-코딩)",
-    seriesTitle: "로블록스 게임 제작 입문 (Lua 코딩)",
-    stats: { totalStudents: 156, avgProgress: 88 },
-    heatmap: [
-      { id: "rb1", title: "Roblox Studio 기초", score: 95, errorCount: 5 },
-      { id: "rb2", title: "Part 속성 제어", score: 88, errorCount: 15 },
-      { id: "rb3", title: "이벤트와 함수", score: 72, errorCount: 64 },
-    ],
-    blindPoints: [
-      {
-        id: "bp-rb-1",
-        lectureTitle: "이벤트와 함수",
-        concept: "이벤트 연결 (Event Connection)",
-        failRate: 52,
-        studentDifficulties: [
-          "Touched 이벤트를 연결한 후 인자로 들어오는 hit 파트가 캐릭터의 일부인지 검증하는 단계를 생략함",
-          "Connect() 함수 내부에 익명 함수를 복잡하게 작성하다 괄호 실수가 잦음"
-        ],
-        aiDeepFeedback: "코드 구조화를 위해 외부에서 정의된 함수를 연결하는 방식을 먼저 연습시키세요. hit.Parent:FindFirstChild('Humanoid')와 같은 방어 코드(Guard) 작성을 습관화하도록 강조해야 합니다.",
-        ragAnchor: "로블록스 개발자 허브 'Scripting Events' 섹션과 관련이 깊습니다."
-      }
-    ]
-  },
-  "mock-Node.js-백엔드-아키텍처": {
-    seriesId: "mock-Node.js-백엔드-아키텍처",
-    seriesTitle: "Node.js 백엔드 아키텍처",
-    stats: { totalStudents: 38, avgProgress: 35 },
-    heatmap: [
-      { id: "nd1", title: "Event Loop", score: 38, errorCount: 145 },
-      { id: "nd2", title: "Express 기초", score: 82, errorCount: 12 },
-      { id: "nd3", title: "Prisma ORM", score: 55, errorCount: 67 },
-    ],
-    blindPoints: []
-  },
-  "mock-자료구조와-알고리즘-(C++)": {
-    seriesId: "mock-자료구조와-알고리즘-(C++)",
-    seriesTitle: "자료구조와 알고리즘 (C++)",
-    stats: { totalStudents: 12, avgProgress: 92 },
-    heatmap: [
-      { id: "al1", title: "시간 복잡도", score: 92, errorCount: 1 },
-      { id: "al2", title: "Linked List", score: 64, errorCount: 23 },
-    ],
-    blindPoints: []
   }
 }
 
@@ -217,46 +123,18 @@ function AnalyticsContent() {
 
   const handleRunAgent = async () => {
     setIsAnalyzing(true)
-    
-    // 개발 단계: 실제 API 호출 대신 더미 데이터 반환 (사용자 요청)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
     try {
-      let dummyPoints = [
-        {
-          id: "dummy-bp-1",
-          lectureTitle: currentSeries?.title || "선택된 강의",
-          concept: "비동기 처리와 상태 업데이트 (Race Condition)",
-          failRate: 78,
-          studentDifficulties: [
-            "연속적인 API 호출 시 이전 요청이 완료되기 전에 상태를 변경하여 데이터가 꼬이는 현상",
-            "useEffect 내에서 클린업 함수를 작성하지 않아 메모리 누수가 발생하는 패턴이 다수 발견됨"
-          ],
-          aiDeepFeedback: "상태 업데이트 로직에 AbortController를 도입하는 방법을 실습 과제로 구성하세요. 단순 문법보다 브라우저의 이벤트 루프와 리액트 렌더링 사이클의 선후 관계를 시각화하여 설명하는 것이 효과적입니다.",
-          ragAnchor: "심화 세션 4장 '성능 최적화' 파트의 비동기 제어 섹션과 연결됩니다."
-        }
-      ]
+      const res = await fetch('/api/teacher/analytics/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seriesId: selectedId })
+      })
 
-      // 파이썬 강좌인 경우 좀 더 구체적인 더미 데이터 제공
-      if (selectedId?.includes("파이썬")) {
-        dummyPoints = [
-          {
-            id: "dummy-py-1",
-            lectureTitle: "엑셀 데이터 자동 처리",
-            concept: "파일 시스템 경로와 절대/상대 경로",
-            failRate: 82,
-            studentDifficulties: [
-              "파일이 존재하는 폴더에서 스크립트를 실행하지 않아 발생하는 FileNotFoundError가 지배적임",
-              "Windows와 Mac/Linux의 경로 구분자(\\/) 차이로 인한 코드 호환성 문제"
-            ],
-            aiDeepFeedback: "os.path 대신 pathlib 라이브러리 사용을 적극 권장하세요. 경로를 하드코딩하기보다 스크립트 위치 기준(file)으로 상대 경로를 추출하는 전형적인 'Base Path' 패턴을 템플릿화하여 제공하는 것이 좋습니다.",
-            ragAnchor: "2장 1절 '파일 다루기' 기초 예제와 92% 연관되어 있습니다."
-          }
-        ]
-      }
+      if (!res.ok) throw new Error("분석에 실패했습니다.")
+      const { blindPoints } = await res.json()
       
-      setRealBlindPoints(dummyPoints)
-      setSuccess("AI 에이전트가 분석을 완료했습니다. (테스트 모드: 더미 데이터)")
+      setRealBlindPoints(blindPoints)
+      setSuccess("AI 에이전트가 실제 DB 데이터를 전행 분석하여 취약점을 도출했습니다.")
       setTimeout(() => setSuccess(null), 4000)
     } catch (err: any) {
       console.error(err)
@@ -340,7 +218,7 @@ function AnalyticsContent() {
 
         <Button 
           onClick={handleRunAgent}
-          disabled={isAnalyzing || !selectedId}
+          disabled={isAnalyzing}
           className="bg-gray-900 hover:bg-black text-white rounded-xl font-bold flex items-center gap-2 px-5 h-12 shadow-md shrink-0"
         >
           <RefreshCw className={cn("h-4 w-4", isAnalyzing && "animate-spin")} />
