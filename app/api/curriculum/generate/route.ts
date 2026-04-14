@@ -67,16 +67,16 @@ export async function POST(req: NextRequest) {
       goal: s.goal
     }))
 
-    const systemPrompt = `당신은 전 세계의 학습 데이터를 분석하여 최적의 학습 경로를 설계하는 'Syllabix 수석 교육 설계자(Senior Learning Architect)'입니다. 
-당신의 목표는 단순한 일정표 작성이 아니라, 학습자의 인지적 과부하를 방지하고 동기를 극대화하는 '전략적 마스터플랜'을 수립하는 것입니다.
+    const systemPrompt = `당신은 최적의 학습 경로를 설계하는 'Syllabix 수석 교육 설계자'입니다. 
+인지 부하를 방지하고 동기를 극대화하는 '전략적 마스터플랜'을 수립하세요.
 
-[당신의 페르소나 및 원칙]
-1. 분석적 사고: 학습자의 현재 수준과 목표 사이의 '지식 격차(Knowledge Gap)'를 정밀하게 진단합니다.
-2. 현실적 제약 고려: 주당 가용 시간을 바탕으로 실현 불가능한 계획은 지양하고, 집중이 필요한 구간에서 학습 밀도를 조정합니다.
-3. 이탈 방지 전략 (Risk Management): 과거 데이터를 기반으로 학습자가 포기하기 쉬운 '고비(Risk Points)'를 예측하고, 이를 극복하기 위한 인사이트를 aiInsight 필드에 상세히 기록합니다.
-4. 배제 원칙: 학습자가 제외하고 싶어 하는 기술이나 방식은 철저히 배제하되, 필수적인 대체 개념이 있다면 제안합니다.
+[원칙]
+1. 분석적 사고: 학습자의 지식 격차(Knowledge Gap)를 진단합니다.
+2. 현실적 제약: 가용 시간 내 최적의 학습 밀도를 조정합니다.
+3. 이탈 방지: 포기하기 쉬운 '고비'를 예측해 aiInsight에 기록합니다.
+4. 배제 원칙: 요청한 제외 기술은 빼되 필요시 대체 개념을 제안합니다.
 
-반드시 JSON 형식으로만 응답하며, 지정된 JSON 스키마 구조를 엄격히 준수하세요.`
+JSON 형식 및 스키마 구조를 엄격히 준수하세요.`
 
     const userPrompt = `[학습자 커스터마이징 요청]
 - 관심 주제 및 목표: ${goal}
@@ -115,19 +115,16 @@ export async function POST(req: NextRequest) {
 
     const matchingModel = getGeminiModel({ temperature: 0.1 }, MODELS.LITE)
     const matchingPrompt = `
-[SYSTEM: Course Matcher]
-사용자가 요청한 커리큘럼의 단계별 목표에 가장 잘 어울리는 실제 강좌를 매칭하세요.
+[Course Matcher] 커리큘럼 단계와 실제 강좌를 매칭하세요.
 
-[요청된 커리큘럼 단계별 목표]
-${curriculum.phases.map((p: any, i: number) => `Phase ${i+1}: ${p.title} - ${p.topics.join(', ')}`).join('\n')}
+[목표]
+${curriculum.phases.map((p: any, i: number) => `Phase ${i+1}: ${p.title} (${p.topics.join(', ')})`).join('\n')}
 
-[DB 내 사용 가능한 실제 강좌 목록]
-${publishedSeries.map(s => `ID: ${s.id}, 제목: ${s.title}, 설명: ${s.description}`).join('\n')}
+[DB 강좌 목록]
+${publishedSeries.map(s => `ID: ${s.id}, 제목: ${s.title}`).join('\n')}
 
 [요구사항]
-- 각 Phase별로 가장 연관성이 높은 강좌를 최대 2개씩 골라 JSON 배열로 반환하세요.
-- 결과 형식: [[ID1, ID2], [ID3], [ID4, ID5]] (커리큘럼 단계 순서대로)
-- 오직 JSON 형식의 중첩 배열만 응답하세요.
+- 각 Phase별 최적 강좌 최대 2개를 골라 [[ID1, ID2], [ID3]] 형식의 JSON 배열로만 응답하세요.
 `
     let matchedIds = []
     try {

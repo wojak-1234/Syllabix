@@ -65,9 +65,25 @@ model Series {
 
   lectures    Lecture[] // 소속 강좌 목록
   enrollments Enrollment[] // 수강 등록
+  blindPoints SeriesBlindPoint[] // [신규] 강좌 전체 분석 결과
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model SeriesBlindPoint {
+  id              String   @id @default(cuid())
+  seriesId        String
+  series          Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  
+  concept         String   // 취약 개념 (예: "Recursion")
+  lectureTitle    String   // 분석에 사용된 대표 강의명
+  failRate        Float    // 취약점 노출 실패율
+  studentDifficulties String // 학생들이 겪는 어려움 (JSON stringify된 배열)
+  aiDeepFeedback  String   // AI의 정밀 분석 및 교수 전략 조언
+  ragAnchor       String?  // RAG 참조 구간
+
+  createdAt       DateTime @default(now())
 }
 
 // ── Lecture (강좌) ── Series에 종속 ──────────────────────────────────

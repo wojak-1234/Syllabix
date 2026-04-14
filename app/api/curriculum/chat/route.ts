@@ -101,20 +101,13 @@ export async function POST(req: NextRequest) {
 
         const turnGuidance = buildChatTurnGuidance(answeredCount, initialForm.goal)
 
-        const prompt = `${MODELS.LITE === 'gemini-3.1-flash-lite-preview' ? '' : ''}
-당신은 코딩 교육 전문 컨설턴트입니다. 사용자의 목표에 최적화된 맞춤형 질문 하나만 생성하세요.
+        const prompt = `코딩 컨설턴트로서 최적화된 맞춤형 질문 하나를 생성하세요.
 
-[초기 진단 정보]
-- 목표: ${initialForm.goal}
-- 현재 수준: ${initialForm.currentLevel}
+[정보] 목표: ${initialForm.goal}, 수준: ${initialForm.currentLevel}
+[기록] ${conversationHistory}
+[지침] ${turnGuidance}
 
-[이전 대화 기록]
-${conversationHistory}
-
-[다음 질문 생성 지침]
-**${turnGuidance}**
-
-답변은 1~2문장의 친절하고 부드러운 톤으로 작성하세요. JSON 형식으로 응답하세요.`
+1~2문장의 친절한 톤으로 JSON 응답하세요.`
 
         const result = await model.generateContent(prompt)
         const responseText = result.response.text()

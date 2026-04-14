@@ -15,9 +15,9 @@ export const genAI = new GoogleGenerativeAI(apiKey)
  * - PRO     : 커리큘럼 설계, 강의 초안 생성 등 복잡한 구조화 작업
  */
 export const MODELS = {
-  LITE:     "gemini-3.1-flash-lite-preview",
-  STANDARD: "gemini-3.1-flash-lite-preview",
-  PRO:      "gemini-3.1-flash-lite-preview",
+  LITE:     "gemini-2.5-flash",
+  STANDARD: "gemini-2.5-flash",
+  PRO:      "gemini-2.5-flash",
 } as const
 
 /** @deprecated DEFAULT_MODEL 대신 MODELS.LITE / MODELS.STANDARD / MODELS.PRO 를 명시적으로 사용하세요. */

@@ -24,24 +24,20 @@ export async function POST(req: NextRequest) {
 
     // 2. LangChain ChatGoogleGenerativeAI 인스턴스 생성
     const model = new ChatGoogleGenerativeAI({
-      modelName: "gemini-1.5-flash",
+      modelName: "gemini-2.5-flash",
       maxOutputTokens: 2048,
       apiKey: process.env.GEMINI_API_KEY,
     })
 
     // 3. 랑체인 프롬프트 템플릿 구성
     const prompt = new PromptTemplate({
-      template: `학습자의 활동 로그를 분석하여 '모르는 줄 모르는' 취약 개념(Blind Points)을 찾아내고 정해진 형식에 맞춰 답변하세요.
+      template: `로그를 분석해 'Blind Points(취약점)'를 찾아 정해진 형식으로 답하세요.
       
       {format_instructions}
       
-      활동 로그:
-      {activity_log}
+      로그: {activity_log}
       
-      분석 기준:
-      1. 동일 키워드 반복 오답
-      2. IDE 실습 내 논리적 방황 구간 추적
-      3. RAG 기반 강의 텍스트와 매칭되는 취약점 추출`,
+      기준: 반복 오답, 논리적 방황, 강의 텍스트 매칭`,
       inputVariables: ["activity_log"],
       partialVariables: { format_instructions: parser.getFormatInstructions() },
     })
